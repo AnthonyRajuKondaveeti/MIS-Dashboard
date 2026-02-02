@@ -14,6 +14,7 @@ ENV/
 # Temporary files
 temp_*
 *.tmp
+temp_vr_*.csv
 
 # Output files
 output/

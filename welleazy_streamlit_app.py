@@ -22,10 +22,43 @@ import bcrypt
 load_dotenv()
 
 def load_credentials():
-    """Load credentials from YAML config"""
-    with open('config_auth.yaml') as file:
-        config = yaml.load(file, Loader=SafeLoader)
-    return config['credentials']['usernames']
+    """Load credentials from st.secrets, then Environment Variables, then YAML config"""
+    # 1. Try Streamlit Secrets (secrets.toml or Streamlit Cloud)
+    try:
+        if "credentials" in st.secrets:
+            return st.secrets["credentials"]["usernames"]
+    except Exception:
+        pass
+
+    # 2. Try Environment Variables (EC2/Server fallback)
+    admin_pass = os.getenv('WELLEAZY_ADMIN_PASSWORD_HASH')
+    manager_pass = os.getenv('WELLEAZY_MANAGER_PASSWORD_HASH')
+    
+    if admin_pass and manager_pass:
+        return {
+            "admin": {
+                "email": os.getenv('WELLEAZY_ADMIN_EMAIL', 'admin@welleazy.com'),
+                "name": os.getenv('WELLEAZY_ADMIN_NAME', 'Admin User'),
+                "password": admin_pass
+            },
+            "manager": {
+                "email": os.getenv('WELLEAZY_MANAGER_EMAIL', 'manager@welleazy.com'),
+                "name": os.getenv('WELLEAZY_MANAGER_NAME', 'Manager User'),
+                "password": manager_pass
+            }
+        }
+
+    # 3. Fallback to local YAML config
+    try:
+        config_path = Path(__file__).parent / 'config_auth.yaml'
+        if config_path.exists():
+            with open(config_path) as file:
+                config = yaml.load(file, Loader=SafeLoader)
+                return config['credentials']['usernames']
+    except Exception as e:
+        st.error(f"⚠️ Failed to load credentials from YAML: {str(e)}")
+        
+    return {}
 
 def verify_password(plain_password, hashed_password):
     """Verify password against bcrypt hash"""

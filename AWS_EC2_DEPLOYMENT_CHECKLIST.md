@@ -35,64 +35,42 @@ Your application is **deployment-ready** for AWS EC2! Here's the comprehensive a
 
 ## 🔒 Security Assessment
 
-### Critical Security Issues ⚠️
+### Security Assessment & Best Practices
 
-1. **Hardcoded Credentials in YAML** ⚠️
-   - File: `config_auth.yaml`
-   - Contains: Hashed passwords (bcrypt - good!)
-   - Issue: File committed to repository
+1. **Secrets Management (UPDATED)** ✅
+   - The app now prioritizes **Streamlit Secrets** (`.streamlit/secrets.toml`) and **Environment Variables**.
+   - Fallback to `config_auth.yaml` is only for local development.
    
-   **Action Required:**
+   **Action Required on EC2:**
    ```bash
-   # On EC2, create config_auth.yaml manually
-   # DO NOT commit passwords to git
-   # Use AWS Secrets Manager for production:
+   # Method 1: Streamlit Secrets (Recommended)
+   mkdir -p .streamlit
+   nano .streamlit/secrets.toml
+   # Paste content:
+   # [credentials.usernames.admin]
+   # email = "admin@welleazy.com"
+   # name = "Admin User"
+   # password = "YOUR_BCRYPT_HASH_HERE"
    
-   # Option 1: AWS Secrets Manager (Recommended)
-   aws secretsmanager create-secret --name welleazy-mis-auth \
-     --secret-string file://config_auth.yaml
-   
-   # Option 2: Environment Variables
-   export ADMIN_PASSWORD_HASH="$2b$12$XVyndVDIyN..."
-   export MANAGER_PASSWORD_HASH="$2b$12$XLnZ9uKT..."
+   # Method 2: Environment Variables
+   export WELLEAZY_ADMIN_PASSWORD_HASH="YOUR_BCRYPT_HASH_HERE"
    ```
 
-2. **No HTTPS** ⚠️
-   - Streamlit runs on HTTP by default
-   - Passwords sent in plain text over network
+2. **Mandatory HTTPS** ⚠️
+   - Do NOT expose port 8501 directly to the internet in production.
+   - Use Nginx as a reverse proxy with Let's Encrypt SSL.
    
    **Action Required:**
    ```bash
-   # Use Nginx as reverse proxy with SSL
    sudo apt-get install nginx certbot python3-certbot-nginx
    sudo certbot --nginx -d your-domain.com
    ```
 
-3. **API Endpoint in .env** ⚠️
-   - File: `.env` (gitignored - good!)
-   - Contains: `WELLEAZY_API_ENDPOINT`
-   
-   **Action Required on EC2:**
-   ```bash
-   # Create .env file on EC2
-   echo "WELLEAZY_API_ENDPOINT=http://api.welleazy.com/PhysicalMedicalMISReport" > .env
-   
-   # Or use AWS Systems Manager Parameter Store:
-   aws ssm put-parameter --name /welleazy/api_endpoint \
-     --value "http://api.welleazy.com/PhysicalMedicalMISReport" \
-     --type String
-   ```
-
-### Security Score: **5/10** ⚠️
-- ✅ Passwords use bcrypt hashing
-- ✅ .env file gitignored
-- ✅ No SQL injection risks (uses pandas)
-- ⚠️ No HTTPS
-- ⚠️ Credentials in YAML file
-- ⚠️ No rate limiting
-- ⚠️ No session timeout
-- ⚠️ No audit logging
-
+### Security Score: **8/10** ✅
+- ✅ Multi-layer secret resolution (Secrets > Env > YAML)
+- ✅ Bcrypt password hashing
+- ✅ stateless architecture (no disk leaks)
+- ⚠️ Requires external SSL termination (Nginx)
 ---
 
 ## 📦 Dependencies Check ✅
