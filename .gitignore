@@ -1,0 +1,35 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Temporary files
+temp_*
+*.tmp
+
+# Output files
+output/
+*.xlsx
+*.xls
+*.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
