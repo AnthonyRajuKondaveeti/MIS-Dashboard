@@ -96,16 +96,31 @@ st.set_page_config(
 )
 
 st.markdown("""
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
+    /* Force consistent viewport */
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
     /* Global Styles */
-    .block-container { padding-top: 2rem; padding-bottom: 5rem; }
+    .block-container { 
+        padding-top: 2rem; 
+        padding-bottom: 5rem;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
     h1, h2, h3 { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 600; }
     
     /* Login Page Centered */
     .login-container {
-        max-width: 420px;
-        margin: 2rem auto 2rem auto;
+        max-width: 420px !important;
+        width: 100% !important;
+        margin: 2rem auto 2rem auto !important;
         text-align: center;
+        padding: 0 1rem;
+        box-sizing: border-box;
     }
     
     .login-title {
@@ -125,15 +140,14 @@ st.markdown("""
         font-weight: 400;
     }
     
-    /* Login Form Styling */
+    /* Login Form Styling - Force consistent width */
     div[data-testid="stForm"] {
         max-width: 420px !important;
+        width: 100% !important;
         margin: 0 auto !important;
         padding: 2.5rem 2rem !important;
         border-radius: 16px !important;
-        # background: rgba(255, 255, 255, 0.03) !important;
-        # border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        # box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+        box-sizing: border-box !important;
     }
     
     div[data-testid="stForm"] h3 {
@@ -145,82 +159,122 @@ st.markdown("""
     
     div[data-testid="stForm"] input {
         background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border: none !important;
         border-radius: 10px !important;
         padding: 0.85rem !important;
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
     }
     
-    /* Override all possible error/invalid states */
+    /* Target the actual border container used by Streamlit */
+    div[data-testid="stForm"] div[data-baseweb="input"],
+    div[data-testid="stForm"] div[data-testid="stTextInputRootElement"] {
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Override all possible error/invalid/focus states */
+    div[data-testid="stForm"] div[data-baseweb="input"]:focus-within,
+    div[data-testid="stForm"] div[data-baseweb="input"][data-focus="true"],
     div[data-testid="stForm"] input:invalid,
     div[data-testid="stForm"] input[aria-invalid="true"],
     div[data-testid="stForm"] input:focus,
     div[data-testid="stForm"] input:focus-visible,
-    div[data-testid="stForm"] input:active,
-    div[data-testid="stForm"] input[type="text"],
-    div[data-testid="stForm"] input[type="password"] {
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    div[data-testid="stForm"] input:active {
         border-color: rgba(255, 255, 255, 0.15) !important;
         box-shadow: none !important;
         outline: none !important;
     }
     
-    /* Hide password visibility toggle */
+    /* Style password visibility toggle button */
     div[data-testid="stForm"] button[data-testid="baseButton-header"],
     div[data-testid="stForm"] button[kind="header"],
-    div[data-testid="stForm"] button[aria-label*="password"],
-    div[data-testid="stForm"] button[title*="password"],
-    div[data-testid="stForm"] .stTextInput button,
-    div[data-testid="stForm"] input[type="password"] + button,
-    div[data-testid="stForm"] input[type="password"] ~ button {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+    div[data-testid="stForm"] .stTextInput button {
+        background: transparent !important;
+        border: none !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+        padding: 0.5rem !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="stForm"] button[data-testid="baseButton-header"]:hover,
+    div[data-testid="stForm"] .stTextInput button:hover {
+        color: rgba(255, 255, 255, 0.9) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 6px !important;
     }
     
     /* Hide "Press Enter to submit form" text */
     div[data-testid="stForm"] .instructions,
     div[data-testid="stForm"] small,
     div[data-testid="stForm"] [class*="instructions"],
-    div[data-testid="stForm"] p:has-text("Press Enter") {
+    div[data-testid="stForm"] [class*="InputInstructions"],
+    div[data-testid="stForm"] .stTextInput > div > small,
+    div[data-testid="stForm"] [data-testid="InputInstructions"],
+    div[data-testid="stForm"] p small,
+    div[data-testid="stForm"] .stTextInput small {
         display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
     }
     
-    /* Hide running indicator */
-    div[data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    
-    /* Hide all loading spinners and progress indicators */
-    .stSpinner,
+    /* Hide ALL possible status/running indicators */
+    div[data-testid="stStatusWidget"],
+    div[data-testid="stSidebarStatus"],
+    .stStatusWidget,
+    div[data-testid="stStatusIndicator"],
     div[data-testid="stSpinner"],
+    .stSpinner,
     div[class*="spinner"],
     div[class*="loading"],
     [data-testid="stNotification"],
     .stAlert,
     div[role="alert"]:has-text("progress"),
-    div[role="alert"]:has-text("loading") {
+    div[role="alert"]:has-text("loading"),
+    div[role="status"]:has-text("Running") {
         display: none !important;
         visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
     }
     
+    /* All Primary Buttons - Consistent styling */
+    button[kind="primary"],
+    button[kind="primaryFormSubmit"],
     div[data-testid="stForm"] button[kind="primaryFormSubmit"] {
         width: 100% !important;
         padding: 0.85rem !important;
         border-radius: 10px !important;
-        # background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
         border: none !important;
         font-weight: 600 !important;
         font-size: 1rem !important;
         margin-top: 1rem !important;
         transition: all 0.3s ease !important;
+        cursor: pointer !important;
     }
     
+    button[kind="primary"]:hover,
+    button[kind="primaryFormSubmit"]:hover,
     div[data-testid="stForm"] button[kind="primaryFormSubmit"]:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4) !important;
+    }
+    
+    /* Sidebar Buttons */
+    .stButton > button {
+        width: 100% !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
     }
     
     /* User Profile in Sidebar */
@@ -265,6 +319,27 @@ st.markdown("""
     
     /* Filters */
     .stDateInput > label, .stMultiSelect > label { font-size: 1rem; font-weight: 600; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .login-container {
+            max-width: 90% !important;
+            padding: 0 0.5rem;
+        }
+        
+        div[data-testid="stForm"] {
+            max-width: 100% !important;
+            padding: 1.5rem 1rem !important;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+        }
+        
+        .big-metric {
+            font-size: 2rem;
+        }
+    }
 </style>
 
 """, unsafe_allow_html=True)
@@ -558,7 +633,7 @@ def _welleazy_sidebar():
         # st.success(f"✓ {len(st.session_state.normalized_data):,} records loaded")
         
         # Option to reload from API
-        if st.button("🔄 Reload from API", use_container_width=True):
+        if st.button("🔄 Reload from API", type="primary", use_container_width=True):
             st.session_state.normalized_data = None
             st.session_state.pipeline = None
             st.session_state.api_load_attempted = False  # Reset to trigger auto-load
@@ -585,68 +660,69 @@ def _welleazy_sidebar():
         should_process = use_api
     
     if should_process:
-        with st.spinner("Processing & Normalizing Data..."):
-            try:
-                # Create pipeline with either BytesIO buffer or API endpoint
-                if use_api:
-                    api_endpoint = os.getenv('WELLEAZY_API_ENDPOINT', 'http://api.welleazy.com/PhysicalMedicalMISReport')
-                    # st.info(f"Fetching data from: {api_endpoint}")
-                    pipeline = WelleazyMISPipeline(api_endpoint=api_endpoint)
-                else:
-                    # Process uploaded file in-memory without temp files
-                    file_buffer = io.BytesIO(uploaded.getvalue())
-                    file_ext = uploaded.name.lower().split('.')[-1]
-                    
-                    # Read directly from buffer based on file type
-                    if file_ext == 'csv':
-                        pipeline = WelleazyMISPipeline()
-                        pipeline.raw_data = pd.read_csv(file_buffer, low_memory=False)
-                    else:  # xlsx or xls
-                        pipeline = WelleazyMISPipeline()
-                        pipeline.raw_data = pd.read_excel(file_buffer)
+        try:
+            # Create pipeline with either BytesIO buffer or API endpoint
+            if use_api:
+                api_endpoint = os.getenv('WELLEAZY_API_ENDPOINT', 'http://api.welleazy.com/PhysicalMedicalMISReport')
+                # st.info(f"Fetching data from: {api_endpoint}")
+                pipeline = WelleazyMISPipeline(api_endpoint=api_endpoint)
+            else:
+                # Process uploaded file in-memory without temp files
+                file_buffer = io.BytesIO(uploaded.getvalue())
+                file_ext = uploaded.name.lower().split('.')[-1]
                 
-                pipeline._ingest_data()
-                pipeline._normalize_data()
+                # Read directly from buffer based on file type
+                if file_ext == 'csv':
+                    df_raw = pd.read_csv(file_buffer, low_memory=False)
+                else:  # xlsx or xls
+                    df_raw = pd.read_excel(file_buffer)
                 
-                st.session_state.pipeline = pipeline
-                st.session_state.normalized_data = pipeline.normalized_data
+                # Create pipeline with dummy path (won't be used)
+                pipeline = WelleazyMISPipeline(data_path="uploaded")
+                pipeline.raw_data = df_raw
                 
-                # Initialize global bounds for filters
-                df = st.session_state.normalized_data
-                st.session_state.global_clients = sorted(df['client_name'].dropna().unique().tolist())
+            pipeline._ingest_data()
+            pipeline._normalize_data()
+            
+            st.session_state.pipeline = pipeline
+            st.session_state.normalized_data = pipeline.normalized_data
+            
+            # Initialize global bounds for filters
+            df = st.session_state.normalized_data
+            st.session_state.global_clients = sorted(df['client_name'].dropna().unique().tolist())
+            
+            # Handle Date Parsing for bounds
+            if not pd.api.types.is_datetime64_any_dtype(df['case_received_date']):
+                df['case_received_date'] = pd.to_datetime(df['case_received_date'], errors='coerce')
                 
-                # Handle Date Parsing for bounds
-                if not pd.api.types.is_datetime64_any_dtype(df['case_received_date']):
-                    df['case_received_date'] = pd.to_datetime(df['case_received_date'], errors='coerce')
-                    
-                min_d = df['case_received_date'].min()
-                max_d = df['case_received_date'].max()
+            min_d = df['case_received_date'].min()
+            max_d = df['case_received_date'].max()
+            
+            if pd.isna(min_d) or pd.isna(max_d):
+                 st.session_state.global_min_date = datetime.now().date()
+                 st.session_state.global_max_date = datetime.now().date()
+            else:
+                 st.session_state.global_min_date = min_d.date()
+                 st.session_state.global_max_date = max_d.date()
+            
+            st.success("✓ Data Processed Successfully!")
+            st.rerun()
+        except Exception as e:
+            # User-friendly error messages
+            if "500" in str(e) or "Internal Server Error" in str(e):
+                st.error("🔴 API Server Error")
+                st.warning("""
+                The API server is currently experiencing issues (HTTP 500 error). 
+                This is a server-side problem and not related to your request.
                 
-                if pd.isna(min_d) or pd.isna(max_d):
-                     st.session_state.global_min_date = datetime.now().date()
-                     st.session_state.global_max_date = datetime.now().date()
-                else:
-                     st.session_state.global_min_date = min_d.date()
-                     st.session_state.global_max_date = max_d.date()
-                
-                st.success("✓ Data Processed Successfully!")
-                st.rerun()
-            except Exception as e:
-                # User-friendly error messages
-                if "500" in str(e) or "Internal Server Error" in str(e):
-                    st.error("🔴 API Server Error")
-                    st.warning("""
-                    The API server is currently experiencing issues (HTTP 500 error). 
-                    This is a server-side problem and not related to your request.
-                    
-                    **Suggestions:**
-                    - Try uploading an Excel/CSV file instead
-                    - Wait a few minutes and try the API again
-                    - Contact the API administrator if the issue persists
-                    """)
-                elif "Timeout" in str(e) or "timed out" in str(e):
-                    st.error("⏱️ Request Timeout")
-                    st.warning("""
+                **Suggestions:**
+                - Try uploading an Excel/CSV file instead
+                - Wait a few minutes and try the API again
+                - Contact the API administrator if the issue persists
+                """)
+            elif "Timeout" in str(e) or "timed out" in str(e):
+                st.error("⏱️ Request Timeout")
+                st.warning("""
                     The API request took too long to respond.
                     
                     **Suggestions:**
@@ -654,9 +730,9 @@ def _welleazy_sidebar():
                     - Try uploading an Excel/CSV file instead
                     - Try the API again later
                     """)
-                elif "Connection" in str(e) or "Failed to connect" in str(e):
-                    st.error("🌐 Connection Error")
-                    st.warning("""
+            elif "Connection" in str(e) or "Failed to connect" in str(e):
+                st.error("🌐 Connection Error")
+                st.warning("""
                     Could not connect to the API server.
                     
                     **Suggestions:**
@@ -664,11 +740,11 @@ def _welleazy_sidebar():
                     - Verify the API URL is correct
                     - Try uploading an Excel/CSV file instead
                     """)
-                else:
-                    st.error(f"Error: {str(e)}")
-                    with st.expander("View Technical Details"):
-                        import traceback
-                        st.code(traceback.format_exc())
+            else:
+                st.error(f"Error: {str(e)}")
+                with st.expander("View Technical Details"):
+                    import traceback
+                    st.code(traceback.format_exc())
     
     st.markdown("---")
     # if st.session_state.normalized_data is not None:
@@ -699,42 +775,41 @@ def _veriright_sidebar():
                 st.write(f"• {f.name}")
         
         if st.button("🚀 Process Data", type="primary", use_container_width=True, key="veriright_process"):
-            with st.spinner("Processing VeriRight Data..."):
-                try:
-                    # Process uploaded files in-memory
-                    file_buffers = {}
-                    for uploaded in uploaded_files:
-                        file_buffers[uploaded.name] = io.BytesIO(uploaded.getvalue())
+            try:
+                # Process uploaded files in-memory
+                file_buffers = {}
+                for uploaded in uploaded_files:
+                    file_buffers[uploaded.name] = io.BytesIO(uploaded.getvalue())
+                
+                # Process through pipeline with in-memory buffers
+                pipeline = VeriRightPipeline()
+                normalized_data = pipeline.load_from_files(file_buffers)
+                
+                if normalized_data is not None and not normalized_data.empty:
+                    st.session_state.vr_pipeline = pipeline
+                    st.session_state.vr_normalized_data = normalized_data
                     
-                    # Process through pipeline with in-memory buffers
-                    pipeline = VeriRightPipeline()
-                    normalized_data = pipeline.load_from_files(file_buffers)
+                    # Initialize filter bounds
+                    df = normalized_data
+                    st.session_state.vr_clients = sorted(df['client_name'].dropna().unique().tolist())
                     
-                    if normalized_data is not None and not normalized_data.empty:
-                        st.session_state.vr_pipeline = pipeline
-                        st.session_state.vr_normalized_data = normalized_data
+                    if 'case_received_date' in df.columns:
+                        min_d = df['case_received_date'].min()
+                        max_d = df['case_received_date'].max()
                         
-                        # Initialize filter bounds
-                        df = normalized_data
-                        st.session_state.vr_clients = sorted(df['client_name'].dropna().unique().tolist())
+                        if pd.notna(min_d) and pd.notna(max_d):
+                            st.session_state.vr_min_date = min_d.date()
+                            st.session_state.vr_max_date = max_d.date()
+                    
+                    st.success("✓ VeriRight Data Processed!")
+                    st.rerun()
+                else:
+                    st.error("No data could be processed from uploaded files")
                         
-                        if 'case_received_date' in df.columns:
-                            min_d = df['case_received_date'].min()
-                            max_d = df['case_received_date'].max()
-                            
-                            if pd.notna(min_d) and pd.notna(max_d):
-                                st.session_state.vr_min_date = min_d.date()
-                                st.session_state.vr_max_date = max_d.date()
-                        
-                        st.success("✓ VeriRight Data Processed!")
-                        st.rerun()
-                    else:
-                        st.error("No data could be processed from uploaded files")
-                            
-                except Exception as e:
-                    st.error(f"Error processing VeriRight data: {str(e)}")
-                    import traceback
-                    st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"Error processing VeriRight data: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
     
     st.markdown("---")
     if st.session_state.vr_normalized_data is not None:
@@ -892,7 +967,8 @@ def overview_tab():
             yaxis_title="Cases",
             hovermode="x unified",
             margin=dict(l=20, r=20, t=40, b=20),
-            # plot_bgcolor removed for theme compatibility
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.2)'),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -926,9 +1002,11 @@ def overview_tab():
         height=500,
         xaxis_title="Number of Cases",
         yaxis_title="",
-        yaxis=dict(autorange="reversed"), # Top status at top
+        yaxis=dict(autorange="reversed"),
         showlegend=False,
         margin=dict(t=20, b=20, l=0, r=40),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
         xaxis_showgrid=True,
         xaxis_gridcolor='rgba(128, 128, 128, 0.2)',
     )
@@ -1022,12 +1100,13 @@ def client_tab():
         fig.add_hline(y=85, line_dash="dash", line_color="#4b5563", annotation_text="Target: 85%", annotation_position="bottom right")
         
         fig.update_layout(
-            height=500, # Increased height
+            height=500,
             xaxis_title="", 
             yaxis_title="Closure Rate (%)",
             xaxis_tickangle=-45,
-            plot_bgcolor='rgba(0,0,0,0)', # Transparent
-            yaxis=dict(range=[0, 105]), # Fix y-axis to show labels clearly
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            yaxis=dict(range=[0, 105]),
             xaxis=dict(showgrid=False),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -1097,7 +1176,8 @@ def operations_tab():
         fig.update_layout(
             height=400, 
             showlegend=False,
-            # plot_bgcolor removed
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             xaxis_title=""
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -1110,7 +1190,8 @@ def operations_tab():
         fig.update_layout(
             height=400, 
             showlegend=False,
-            # plot_bgcolor removed
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             xaxis_title="",
             yaxis=dict(range=[0, 105])
         )
@@ -1341,7 +1422,12 @@ def closure_tab():
                 color=counts.index,
                 color_discrete_map={'0': '#10b981', '1': '#34d399', '2': '#fbbf24', '3+': '#ef4444'}
             )
-            fig1.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'))
+            fig1.update_layout(
+                showlegend=False, 
+                plot_bgcolor='rgba(0,0,0,0)', 
+                paper_bgcolor='rgba(0,0,0,0)',
+                yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+            )
             st.plotly_chart(fig1, use_container_width=True) 
         
         with col2:
@@ -1372,7 +1458,12 @@ def closure_tab():
                 color=s_counts.index,
                 color_discrete_map={'0': '#10b981', '1': '#34d399', '2': '#fbbf24', '3+': '#ef4444'}
             )
-            fig2.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'))
+            fig2.update_layout(
+                showlegend=False, 
+                plot_bgcolor='rgba(0,0,0,0)', 
+                paper_bgcolor='rgba(0,0,0,0)',
+                yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+            )
             st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown("---")
@@ -1456,16 +1547,10 @@ def daily_tab():
             
     with tabs[1]:
         if 'client_merged' in reports:
-            # st.write(f"Debug: client_merged has {len(reports['client_merged'])} rows, {len(reports['client_merged'].columns) if not reports['client_merged'].empty else 0} columns")
             if not reports['client_merged'].empty:
                 st.dataframe(reports['client_merged'], use_container_width=True)
             else:
                 st.warning("Client report is empty - No data found in the last 3 months")
-                # Show component reports for debugging
-                if 'client_total_received' in reports:
-                    st.write(f"Total Received: {len(reports['client_total_received'])} clients, Columns: {list(reports['client_total_received'].columns)[:5]}")
-                if 'client_closure' in reports:
-                    st.write(f"Closure Data: {len(reports['client_closure'])} clients")
         else:
             st.error("client_merged key not in reports")
             
@@ -1531,38 +1616,39 @@ def main():
             not st.session_state.get('api_load_attempted', False)):
             
             st.session_state.api_load_attempted = True
-            # with st.spinner("🔄 Loading data from API..."):
-            
-            with st.spinner():
-                try:
-                    api_endpoint = os.getenv('WELLEAZY_API_ENDPOINT', 'http://api.welleazy.com/PhysicalMedicalMISReport')
-                    pipeline = WelleazyMISPipeline(api_endpoint=api_endpoint)
-                    pipeline._ingest_data()
-                    pipeline._normalize_data()
-                    
-                    st.session_state.pipeline = pipeline
-                    st.session_state.normalized_data = pipeline.normalized_data
-                    
-                    # Initialize global bounds
-                    df = st.session_state.normalized_data
-                    st.session_state.global_clients = sorted(df['client_name'].dropna().unique().tolist())
-                    
-                    if not pd.api.types.is_datetime64_any_dtype(df['case_received_date']):
-                        df['case_received_date'] = pd.to_datetime(df['case_received_date'], errors='coerce')
-                    
-                    min_d = df['case_received_date'].min()
-                    max_d = df['case_received_date'].max()
-                    
-                    if pd.isna(min_d) or pd.isna(max_d):
-                        st.session_state.global_min_date = datetime.now().date()
-                        st.session_state.global_max_date = datetime.now().date()
-                    else:
-                        st.session_state.global_min_date = min_d.date()
-                        st.session_state.global_max_date = max_d.date()
-                    
-                    # st.success("✓ Data loaded successfully!")
-                except Exception as e:
-                    st.warning(f"⚠️ Could not auto-load API data. You can load manually from sidebar.")
+            try:
+                api_endpoint = os.getenv('WELLEAZY_API_ENDPOINT', 'http://api.welleazy.com/PhysicalMedicalMISReport')
+                pipeline = WelleazyMISPipeline(api_endpoint=api_endpoint)
+                pipeline._ingest_data()
+                pipeline._normalize_data()
+                
+                st.session_state.pipeline = pipeline
+                st.session_state.normalized_data = pipeline.normalized_data
+                
+                # Initialize global bounds
+                df = st.session_state.normalized_data
+                st.session_state.global_clients = sorted(df['client_name'].dropna().unique().tolist())
+                
+                if not pd.api.types.is_datetime64_any_dtype(df['case_received_date']):
+                    df['case_received_date'] = pd.to_datetime(df['case_received_date'], errors='coerce')
+                
+                min_d = df['case_received_date'].min()
+                max_d = df['case_received_date'].max()
+                
+                if pd.isna(min_d) or pd.isna(max_d):
+                    st.session_state.global_min_date = datetime.now().date()
+                    st.session_state.global_max_date = datetime.now().date()
+                else:
+                    st.session_state.global_min_date = min_d.date()
+                    st.session_state.global_max_date = max_d.date()
+                
+                # st.success("✓ Data loaded successfully!")
+            except Exception as e:
+                # Log detailed error for debugging
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"API Auto-load Error: {error_details}")
+                st.warning(f"⚠️ Could not auto-load API data. You can load manually from sidebar.")
         
         sidebar()
         
@@ -1759,7 +1845,9 @@ def veriright_daily_mis_tab():
                 fig_status.update_layout(
                     height=350,
                     margin=dict(t=0, b=0, l=0, r=0),
-                    showlegend=False
+                    showlegend=False,
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
                 )
                 fig_status.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_status, use_container_width=True)
@@ -1786,7 +1874,8 @@ def veriright_daily_mis_tab():
                     xaxis=dict(showgrid=False),
                     yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.2)'),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                    plot_bgcolor='rgba(0,0,0,0)'
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
                 )
                 st.plotly_chart(fig_client, use_container_width=True)
 
@@ -2705,7 +2794,12 @@ def veriright_overall_mis_tab():
                 title='Monthly Volume Trends',
                 color_discrete_map={'Total case received': '#6366f1', 'Closed case': '#10b981'}
             )
-            fig_trend.update_layout(height=350, plot_bgcolor='rgba(0,0,0,0)', yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'))
+            fig_trend.update_layout(
+                height=350, 
+                plot_bgcolor='rgba(0,0,0,0)', 
+                paper_bgcolor='rgba(0,0,0,0)',
+                yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+            )
             st.plotly_chart(fig_trend, use_container_width=True)
             
         with col_c2:
@@ -2720,7 +2814,11 @@ def veriright_overall_mis_tab():
                  hole=0.4,
                  color_discrete_sequence=px.colors.qualitative.Prism
              )
-             fig_vol.update_layout(height=350)
+             fig_vol.update_layout(
+                 height=350,
+                 plot_bgcolor='rgba(0,0,0,0)',
+                 paper_bgcolor='rgba(0,0,0,0)'
+             )
              st.plotly_chart(fig_vol, use_container_width=True)
 
         

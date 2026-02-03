@@ -41,17 +41,27 @@ class VeriRightPipeline:
         
         dataframes = {}
         
-        for name, path in file_paths.items():
+        for name, path_or_buffer in file_paths.items():
             try:
-                if not Path(path).exists():
-                    logger.error(f"File not found: {path}")
-                    continue
+                # 1. Handle Path/String
+                if isinstance(path_or_buffer, (str, Path)):
+                    if not Path(path_or_buffer).exists():
+                        logger.error(f"File not found: {path_or_buffer}")
+                        continue
+                    
+                    if str(path_or_buffer).lower().endswith('.csv'):
+                        df = pd.read_csv(path_or_buffer)
+                    else:
+                        df = pd.read_excel(path_or_buffer)
                 
-                # Read file based on extension
-                if path.lower().endswith('.csv'):
-                    df = pd.read_csv(path)
+                # 2. Handle File-like object (e.g. BytesIO from Streamlit)
                 else:
-                    df = pd.read_excel(path)
+                    # Determine type from name if possible
+                    if name.lower().endswith('.csv'):
+                        df = pd.read_csv(path_or_buffer)
+                    else:
+                        df = pd.read_excel(path_or_buffer)
+                
                 dataframes[name] = df
                 logger.info(f"Loaded {name}: {len(df)} rows, {len(df.columns)} columns")
                 

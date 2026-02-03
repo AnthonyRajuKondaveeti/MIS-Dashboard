@@ -3,12 +3,15 @@
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 Install required packages:
+
 ```bash
 pip install -r welleazy_requirements.txt
 ```
 
 ### Launch the Dashboard
+
 ```bash
 streamlit run welleazy_streamlit_app.py
 ```
@@ -20,7 +23,9 @@ The app will open in your browser at `http://localhost:8501`
 ## 📊 Using the Dashboard
 
 ### System Selection
+
 At the top of the sidebar, you'll see two options:
+
 - **Welleazy**: Healthcare case management MIS
 - **VeriRight**: Client performance MIS
 
@@ -31,11 +36,13 @@ Click to switch between systems. Each maintains its own data and state.
 ## 🏥 Welleazy Mode
 
 ### Upload Data
+
 1. Click "Upload CRM Data" in the sidebar
 2. Select your CSV/Excel file
 3. Click "🚀 Process Data"
 
 ### Available Tabs
+
 1. **Overview**: Executive dashboard with KPIs and trends
 2. **Clients**: Client-wise performance metrics
 3. **Operations**: DC performance by location
@@ -45,6 +52,7 @@ Click to switch between systems. Each maintains its own data and state.
 7. **Daily MIS**: Comprehensive daily reports
 
 ### Features
+
 - Date range filters
 - Client selection filters
 - Interactive charts
@@ -56,13 +64,15 @@ Click to switch between systems. Each maintains its own data and state.
 ## 🎯 VeriRight Mode
 
 ### Upload Data
+
 1. Click "Upload Data Files" in the sidebar
 2. Select **multiple** files (HDFC Life, SBI Life, etc.)
 3. Supported formats: Excel (.xlsx, .xls) or CSV (.csv)
 4. Click "🚀 Process Data"
 
 ### Available Tabs
-1. **📊 Client Performance**: 
+
+1. **📊 Client Performance**:
    - Summary KPIs
    - Client-wise monthly report (matching standard format)
    - Closure rate charts
@@ -74,13 +84,15 @@ Click to switch between systems. Each maintains its own data and state.
    - Raw data explorer
 
 ### Report Format
+
 The main report matches this structure:
 
 | Client name | Month | Total case received | Closed case | % As per Close | Closure Date case | Targets |
-|------------|-------|---------------------|-------------|----------------|-------------------|---------|
-| HDFC Life  | Oct   | 1956                | 1395        | 71%            | 1472              | 2300    |
+| ----------- | ----- | ------------------- | ----------- | -------------- | ----------------- | ------- |
+| HDFC Life   | Oct   | 1956                | 1395        | 71%            | 1472              | 2300    |
 
 ### Color Indicators
+
 - 🟢 **Green**: ≥ 90% closure rate
 - 🟡 **Yellow**: 80-89% closure rate
 - 🔴 **Red**: < 80% closure rate
@@ -90,13 +102,16 @@ The main report matches this structure:
 ## 📥 Downloads
 
 ### Welleazy
+
 Each tab has its own download button:
+
 - TAT Report (Excel)
 - Pending Report (Excel)
 - Closure TAT Report (Excel)
 - Daily MIS (Excel with multiple sheets)
 
 ### VeriRight
+
 - Client Monthly Report (Excel)
 - Raw Data (Excel)
 
@@ -111,12 +126,14 @@ You can freely switch between Welleazy and VeriRight using the sidebar radio but
 ## 💡 Tips
 
 ### For Welleazy
+
 - Use date filters to focus on specific periods
 - Filter by specific clients for targeted analysis
 - Check "High TAT Calculation Details" expander for methodology
 - Download reports before applying new filters
 
 ### For VeriRight
+
 - Upload all client files at once for a complete view
 - The system automatically merges and normalizes data
 - Cancelled cases are filtered out automatically
@@ -127,16 +144,19 @@ You can freely switch between Welleazy and VeriRight using the sidebar radio but
 ## 🎨 Dashboard Features
 
 ### Responsive Design
+
 - Works on desktop and tablets
 - Dark/light mode support
 - Clean, professional interface
 
 ### Real-time Updates
+
 - KPIs calculate instantly
 - Charts update automatically
 - No manual refresh needed
 
 ### Data Quality
+
 - Automatic date parsing
 - Status normalization
 - Duplicate removal
@@ -168,7 +188,9 @@ welleazy_streamlit_app.py       # Main unified dashboard
 ## 🛠️ Customization
 
 ### Update Client Targets (VeriRight)
+
 Edit `veriright_config.py`:
+
 ```python
 CLIENT_TARGETS = {
     'Your Client Name': 500,
@@ -177,6 +199,7 @@ CLIENT_TARGETS = {
 ```
 
 ### Update Status Filters
+
 Edit respective config files to adjust which statuses count as closed/pending.
 
 ---
@@ -184,16 +207,19 @@ Edit respective config files to adjust which statuses count as closed/pending.
 ## ❓ Troubleshooting
 
 ### Dashboard not loading?
+
 - Ensure all dependencies are installed
 - Check that you're in the correct directory
 - Try: `streamlit run welleazy_streamlit_app.py --server.port 8502`
 
 ### Data not processing?
+
 - Verify file format (Excel/CSV)
 - Check that required columns exist
 - Look at terminal for error messages
 
 ### Charts not displaying?
+
 - Clear browser cache
 - Refresh the page
 - Check browser console for JavaScript errors
@@ -203,6 +229,7 @@ Edit respective config files to adjust which statuses count as closed/pending.
 ## 🤝 Support
 
 For issues:
+
 1. Check error messages in terminal
 2. Verify data format matches requirements
 3. Review respective README files for detailed documentation

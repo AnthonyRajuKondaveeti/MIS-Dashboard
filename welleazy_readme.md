@@ -1,6 +1,7 @@
 # Welleazy MIS Dashboard - Technical Documentation
 
 ## 1. Project Overview
+
 The **Welleazy MIS Dashboard** is a comprehensive executive reporting tool designed to aggregate, process, and visualize data from the Welleazy CRM. It provides real-time insights into case statuses, turnaround times (TAT), operational efficiency, and client performance.
 
 Built with **Streamlit**, **Pandas**, and **Plotly**, the application processes raw Excel/CSV data to generate interactive metrics and downloadable reports.
@@ -10,102 +11,119 @@ Built with **Streamlit**, **Pandas**, and **Plotly**, the application processes 
 The dashboard is organized into 7 key tabs, each serving a specific analytical purpose:
 
 ### 📊 1. Overview
+
 **Purpose:** High-level executive summary of project health.
-*   **Key Metrics:**
-    *   **Total Cases:** Total volume of cases in the uploaded dataset.
-    *   **Closure Rate:** Percentage of cases with a "Closed" status.
-        *   🟢 Excellent: ≥ 90%
-        *   🟡 Warning: 80-89%
-        *   🔴 Critical: < 80%
-    *   **Avg TAT:** Average turnaround time for **all cases** with appointment dates.
-        *   **Formula:** `(Current date – Appointment date)` for all cases with valid appointment dates.
-        *   *Note: This calculation uses Calendar Days and includes all case statuses.*
-        *   Target: ≤ 2.0 days.
-    *   **High TAT Cases:** Count of active cases exceeding the 3-day threshold.
-*   **Visualizations:** Case Status pie chart, Service Category distribution.
+
+- **Key Metrics:**
+  - **Total Cases:** Total volume of cases in the uploaded dataset.
+  - **Closure Rate:** Percentage of cases with a "Closed" status.
+    - 🟢 Excellent: ≥ 90%
+    - 🟡 Warning: 80-89%
+    - 🔴 Critical: < 80%
+  - **Avg TAT:** Average turnaround time for **all cases** with appointment dates.
+    - **Formula:** `(Current date – Appointment date)` for all cases with valid appointment dates.
+    - _Note: This calculation uses Calendar Days and includes all case statuses._
+    - Target: ≤ 2.0 days.
+  - **High TAT Cases:** Count of active cases exceeding the 3-day threshold.
+- **Visualizations:** Case Status pie chart, Service Category distribution.
 
 ### 👥 2. Clients
+
 **Purpose:** Analysis of volume and efficiency by client.
-*   **Metrics:**
-    *   **Received:** Total cases initiated by the client.
-    *   **Closed:** Total cases successfully closed.
-    *   **Closure Rate:** Efficiency score (`Closed / Received * 100`).
-*   **Features:** Top 10 Clients table and comparative bar charts.
+
+- **Metrics:**
+  - **Received:** Total cases initiated by the client.
+  - **Closed:** Total cases successfully closed.
+  - **Closure Rate:** Efficiency score (`Closed / Received * 100`).
+- **Features:** Top 10 Clients table and comparative bar charts.
 
 ### 🏥 3. Operations
+
 **Purpose:** Geographic and Diagnostic Center (DC) performance.
-*   **Metrics:**
-    *   **City-wise Volume:** Number of cases per city.
-    *   **City-wise Closure:** Efficiency of operations in specific locations.
+
+- **Metrics:**
+  - **City-wise Volume:** Number of cases per city.
+  - **City-wise Closure:** Efficiency of operations in specific locations.
 
 ### ⏱️ 4. TAT MIS (Turnaround Time)
+
 **Purpose:** Monitoring of active cases where the medical checkup is done but the report is still awaited.
-*   **Filter Logic:**
-    *   Status = `Medical Done - Report Awaited` (and variations).
-*   **Key Calculation:**
-    *   **Current TAT** = `(Current date – Appointment date)`
-    *   *Note: This calculation uses Calendar Days.*
-*   **Alerts:** Highlights cases where TAT > 3 days.
-*   **Export:** Downloadable Excel report of all high-TAT cases.
+
+- **Filter Logic:**
+  - Status = `Medical Done - Report Awaited` (and variations).
+- **Key Calculation:**
+  - **Current TAT** = `(Current date – Appointment date)`
+  - _Note: This calculation uses Calendar Days._
+- **Alerts:** Highlights cases where TAT > 3 days.
+- **Export:** Downloadable Excel report of all high-TAT cases.
 
 ### 📋 5. Pending
+
 **Purpose:** Pipeline analysis of cases not yet closed or in the medical stage.
-*   **Filter Logic:**
-    *   Includes statuses like: `Fresh case`, `Call Later`, `Appointment Missed`, `Waiting for DC Confirmation`, etc.
-*   **Key Metrics:**
-    *   **Total Pending:** Count of all non-closed, non-TAT cases.
-    *   **Critical Cases:** "Fresh cases" or Escalations that require immediate attention.
+
+- **Filter Logic:**
+  - Includes statuses like: `Fresh case`, `Call Later`, `Appointment Missed`, `Waiting for DC Confirmation`, etc.
+- **Key Metrics:**
+  - **Total Pending:** Count of all non-closed, non-TAT cases.
+  - **Critical Cases:** "Fresh cases" or Escalations that require immediate attention.
 
 ### ✅ 6. Closure TAT
-**Purpose:** Retrospective analysis of closed cases to measure true operational speed.
-*   **Metrics:**
-    *   **Closure TAT:** The time taken from Appointment to Report Submission.
-        *   **Formula:** `NETWORKDAYS(Appointment date, Case Completion date, 11) - 1`
-        *   *Note: Uses **Business Days** (Mon-Sat, excluding Sundays). Excludes specific Indian Holidays.*
-    *   **Scheduled TAT:** Time from Case Receipt to Appointment Fixing.
-        *   **Formula:** `(Appointment fixed Date - Case received Date)`
-        *   **Formula:** `(Appointment fixed Date - Case received Date)`
-        *   **Note:** Uses Calendar Days.
 
-    *   **Column Headers Explanation (e.g., "2025-11 (TAT 0)"):**
-        *   These columns refer to the **Percentage of cases** completed within that specific number of days for that month.
-        *   **TAT 0**: Same-day completion (0 days).
-        *   **TAT 1**: Completed in 1 day.
-        *   **TAT 2**: Completed in 2 days.
-        *   **TAT 3**: Completed in 3 days **or more** (all cases >3 days are grouped here).
+**Purpose:** Retrospective analysis of closed cases to measure true operational speed.
+
+- **Metrics:**
+  - **Closure TAT:** The time taken from Appointment to Report Submission.
+    - **Formula:** `NETWORKDAYS(Appointment date, Case Completion date, 11) - 1`
+    - _Note: Uses **Business Days** (Mon-Sat, excluding Sundays). Excludes specific Indian Holidays._
+  - **Scheduled TAT:** Time from Case Receipt to Appointment Fixing.
+    - **Formula:** `(Appointment fixed Date - Case received Date)`
+    - **Formula:** `(Appointment fixed Date - Case received Date)`
+    - **Note:** Uses Calendar Days.
+
+  - **Column Headers Explanation (e.g., "2025-11 (TAT 0)"):**
+    - These columns refer to the **Percentage of cases** completed within that specific number of days for that month.
+    - **TAT 0**: Same-day completion (0 days).
+    - **TAT 1**: Completed in 1 day.
+    - **TAT 2**: Completed in 2 days.
+    - **TAT 3**: Completed in 3 days **or more** (all cases >3 days are grouped here).
 
 ### 📅 7. Daily MIS
+
 **Purpose:** Granular daily operational logs, bifurcated by service type.
-*   **Categories:**
-    *   **Drug Cases:** Services containing keywords like "drug", "urine", "alcohol", "toxicology".
-    *   **Non-Drug Cases:** Services containing keywords like "medical", "blood", "x-ray", "health".
-*   **Reports:**
-    *   **Client Report Structure:** Mimics Excel VLOOKUP logic. For each month, it displays 3 columns:
-        *   `[Month]_Received`: Based on Case Entry Date.
-        *   `[Month]_Closed`: Based on Report Upload Date (merged via Client Name).
-        *   `[Month]_Closure%`: `(Closed / Received) * 100`.
-    *   **Bifurcation:** Separate sheets for **Drug Cases** and **Non-Drug Cases**, both following the same 3-column monthly structure.
+
+- **Categories:**
+  - **Drug Cases:** Services containing keywords like "drug", "urine", "alcohol", "toxicology".
+  - **Non-Drug Cases:** Services containing keywords like "medical", "blood", "x-ray", "health".
+- **Reports:**
+  - **Client Report Structure:** Mimics Excel VLOOKUP logic. For each month, it displays 3 columns:
+    - `[Month]_Received`: Based on Case Entry Date.
+    - `[Month]_Closed`: Based on Report Upload Date (merged via Client Name).
+    - `[Month]_Closure%`: `(Closed / Received) * 100`.
+  - **Bifurcation:** Separate sheets for **Drug Cases** and **Non-Drug Cases**, both following the same 3-column monthly structure.
 
 ---
 
 ## 3. Technical Glossary & Calculations
 
 ### Status Normalization
+
 To ensure data consistency, the system "normalizes" status values (e.g., converts `Medical Done-Report Awaited` and `Medicals Done - Report Awaited` to a single standard value).
 
 ### Service Categorization
+
 Services are automatically classified based on keyword matching defined in `welleazy_config.py`:
-*   **Drug Keywords:** `drug, urine drug, substance, toxicology, alcohol, cannabis, narcotic, drug test, drug screen`
-*   **Non-Drug Keywords:** `medical, physical, health, checkup, exam, blood test, x-ray, ecg, vaccination, fitness`
+
+- **Drug Keywords:** `drug, urine drug, substance, toxicology, alcohol, cannabis, narcotic, drug test, drug screen`
+- **Non-Drug Keywords:** `medical, physical, health, checkup, exam, blood test, x-ray, ecg, vaccination, fitness`
 
 ### Turnaround Time (TAT) Methodologies
 
-| Metric | Formula | Type | Logic Location |
-| :--- | :--- | :--- | :--- |
-| **Overview Avg TAT** | `(Current date – Appointment date)` | Calendar Days | `welleazy_streamlit_app.py` (calc_kpis function) |
-| **Active TAT (TAT MIS)** | `(Current date – Appointment date)` | Calendar Days | `welleazy_tat_mis.py` |
-| **Closure TAT** | `NETWORKDAYS(Appt Date, Completion Date, 11) - 1` | **Business Days** | `welleazy_closure_tat_mis.py` |
-| **Scheduled TAT** | `(Appt Fixed Date - Case Received Date)` | Calendar Days | `welleazy_closure_tat_mis.py` |
+| Metric                   | Formula                                           | Type              | Logic Location                                   |
+| :----------------------- | :------------------------------------------------ | :---------------- | :----------------------------------------------- |
+| **Overview Avg TAT**     | `(Current date – Appointment date)`               | Calendar Days     | `welleazy_streamlit_app.py` (calc_kpis function) |
+| **Active TAT (TAT MIS)** | `(Current date – Appointment date)`               | Calendar Days     | `welleazy_tat_mis.py`                            |
+| **Closure TAT**          | `NETWORKDAYS(Appt Date, Completion Date, 11) - 1` | **Business Days** | `welleazy_closure_tat_mis.py`                    |
+| **Scheduled TAT**        | `(Appt Fixed Date - Case Received Date)`          | Calendar Days     | `welleazy_closure_tat_mis.py`                    |
 
     *   **Overview Avg TAT:** Calculated for **all cases** with valid appointment dates, regardless of status.
     *   **Active TAT (TAT MIS):** Calculated only for cases with status = "Medical Done - Report Awaited" (and variations).
@@ -113,26 +131,30 @@ Services are automatically classified based on keyword matching defined in `well
     *   **Business Days:** **Monday to Saturday** (Sunday is the only weekend day). This aligns with `NETWORKDAYS.INTL(..., 11)`.
 
 ### Business Rules & Thresholds
-*   **High TAT Threshold:** > 3 days (Configurable in `MISConfig.TAT_THRESHOLD`).
-*   **Lookback Period:**
-    *   Closure TAT Report: Last 2 months.
-    *   Daily MIS Report: Last 3 months.
-*   **TAT Capping:** For reporting purposes, TAT values sometimes capped at specific maximums (legacy requirement, currently set to max cap of 3 in configuration if enabled).
+
+- **High TAT Threshold:** > 3 days (Configurable in `MISConfig.TAT_THRESHOLD`).
+- **Lookback Period:**
+  - Closure TAT Report: Last 2 months.
+  - Daily MIS Report: Last 3 months.
+- **TAT Capping:** For reporting purposes, TAT values sometimes capped at specific maximums (legacy requirement, currently set to max cap of 3 in configuration if enabled).
 
 ---
 
 ## 4. Setup & Configuration
 
 ### Prerequisites
-*   Python 3.8+
-*   Pandas, Streamlit, Plotly, Openpyxl, Requests
+
+- Python 3.8+
+- Pandas, Streamlit, Plotly, Openpyxl, Requests
 
 ### Installation
+
 ```bash
 pip install -r welleazy_requirements.txt
 ```
 
 ### Running the Application
+
 ```bash
 streamlit run welleazy_streamlit_app.py
 ```
@@ -142,29 +164,35 @@ streamlit run welleazy_streamlit_app.py
 The system supports **two methods** for loading data:
 
 #### Option 1: File Upload (Excel/CSV)
+
 Upload Excel (`.xlsx`) or CSV files through the Streamlit interface. The logic automatically maps your raw column names to system headers.
 
 #### Option 2: API Integration
+
 When no file is uploaded, click the **"🌐 Load Data from API"** button to fetch data directly from:
+
 ```
 http://api.welleazy.com/PhysicalMedicalMISReport
 ```
-*   **Method:** GET
-*   **Authentication:** None required
-*   **Format:** JSON or CSV response
+
+- **Method:** GET
+- **Authentication:** None required
+- **Format:** JSON or CSV response
 
 The API integration allows real-time data loading without manual file uploads, making it ideal for automated reporting workflows.
 
 ### Required Data Columns
-Key columns looked for include:
-*   `Client Name`
-*   `Case ID/TA Code`
-*   `Appointment Date`
-*   `Case Status`
-*   `Service`
-*   `Report Upload Date`
 
-*(See `welleazy_config.py` for the full column mapping list)*
+Key columns looked for include:
+
+- `Client Name`
+- `Case ID/TA Code`
+- `Appointment Date`
+- `Case Status`
+- `Service`
+- `Report Upload Date`
+
+_(See `welleazy_config.py` for the full column mapping list)_
 
 ---
 
@@ -180,11 +208,13 @@ This section provides a detailed, step-by-step explanation of how each MIS repor
 **Class:** `TATMISGenerator`
 
 #### Purpose
+
 Monitor active cases where medical checkups are complete but reports are still pending. Identify cases exceeding the 3-day TAT threshold.
 
 #### Calculation Steps
 
 **Step 1: Data Filtering**
+
 ```python
 # Filter by status (case-insensitive matching)
 target_statuses = [
@@ -197,6 +227,7 @@ filtered_df = df[df['case_status'].str.lower().isin([s.lower() for s in target_s
 ```
 
 **Step 2: TAT Calculation**
+
 ```python
 # Formula: Current Date - Appointment Date (Calendar Days)
 current_date = pd.Timestamp.now().normalize()
@@ -207,18 +238,21 @@ df['tat_days'] = df['tat_days'].clip(lower=0)
 ```
 
 **Step 3: Sorting**
+
 ```python
 # Sort by TAT descending (highest TAT first)
 report = df.sort_values('tat_days', ascending=False)
 ```
 
 **Step 4: High TAT Flagging**
+
 ```python
 # Flag cases where TAT > 3 days
 df['high_tat'] = df['tat_days'] > 3  # MISConfig.TAT_THRESHOLD
 ```
 
 **Step 5: Column Selection**
+
 ```python
 # Keep only relevant columns for the report
 columns = [
@@ -236,6 +270,7 @@ report = df[columns]
 ```
 
 #### Excel Export Logic
+
 - High TAT rows (TAT > 3) are highlighted with **red background** (`FFC7CE`)
 - Headers have **blue background** (`366092`) with white bold text
 - Columns are auto-sized for readability
@@ -248,11 +283,13 @@ report = df[columns]
 **Class:** `PendingCaseMISGenerator`
 
 #### Purpose
+
 Track cases that are not yet closed or in the medical stage. Identify critical cases requiring immediate attention.
 
 #### Calculation Steps
 
 **Step 1: Status Filtering**
+
 ```python
 # Filter for pending statuses
 pending_statuses = [
@@ -282,6 +319,7 @@ filtered_df = df[df['case_status'].str.lower().isin([s.lower() for s in pending_
 ```
 
 **Step 2: Date Preparation**
+
 ```python
 # Extract month-year from case received date
 df['month_year'] = df['case_received_date'].dt.to_period('M').astype(str)
@@ -289,6 +327,7 @@ df['month_year'].fillna('Unknown', inplace=True)
 ```
 
 **Step 3: Pivot Table Creation**
+
 ```python
 # Structure: Case Status (rows) × Month-Year (columns)
 pivot = pd.pivot_table(
@@ -302,6 +341,7 @@ pivot = pd.pivot_table(
 ```
 
 **Step 4: Add Totals**
+
 ```python
 # Add total column (sum across months)
 pivot['Total'] = pivot.sum(axis=1)
@@ -311,6 +351,7 @@ pivot.loc['Total'] = pivot.sum(axis=0)
 ```
 
 #### Highlighting Logic
+
 ```python
 # Critical statuses to highlight (Yellow: FFEB9C)
 critical_statuses = [
@@ -334,11 +375,13 @@ critical_statuses = [
 **Class:** `ClosureTATMISGenerator`
 
 #### Purpose
+
 Retrospective analysis of closed cases to measure operational efficiency. Generates two reports: **Closure TAT** and **Scheduled TAT**.
 
 #### Calculation Steps
 
 **Step 1: Date & Status Filtering**
+
 ```python
 # Filter for last 2 months
 cutoff_date = pd.Timestamp.now() - pd.DateOffset(months=2)
@@ -361,6 +404,7 @@ filtered_df = df[
 ```
 
 **Step 2: Closure TAT Calculation (Business Days)**
+
 ```python
 # Formula: NETWORKDAYS(Appointment Date, Case Completion Date, 11) - 1
 # Where 11 = Sunday-only weekend (Mon-Sat are working days)
@@ -372,7 +416,7 @@ def calculate_networkdays(start_date, end_date):
     - Excludes: Indian public holidays (defined list)
     - Returns: Number of working days
     """
-    
+
     # Define Indian holidays
     indian_holidays = [
         '2024-01-26',  # Republic Day
@@ -381,11 +425,11 @@ def calculate_networkdays(start_date, end_date):
         '2024-12-25',  # Christmas
         # ... (full list in code)
     ]
-    
+
     # weekmask: Mon Tue Wed Thu Fri Sat Sun
     #           1   1   1   1   1   1   0
     weekmask = [1, 1, 1, 1, 1, 1, 0]
-    
+
     # Use numpy's busday_count with custom weekmask
     working_days = np.busday_count(
         start_date.date(),
@@ -393,7 +437,7 @@ def calculate_networkdays(start_date, end_date):
         weekmask=weekmask,
         holidays=indian_holidays
     )
-    
+
     return working_days - 1  # Subtract 1 as per Excel formula
 
 # Apply to all rows
@@ -407,6 +451,7 @@ df['closure_tat'] = df.apply(
 ```
 
 **Step 3: Scheduled TAT Calculation (Calendar Days)**
+
 ```python
 # Formula: Appointment Fixed Date - Case Received Date
 df['scheduled_tat'] = (
@@ -415,6 +460,7 @@ df['scheduled_tat'] = (
 ```
 
 **Step 4: TAT Value Cleaning**
+
 ```python
 # Rule 1: Convert negative TATs to 0
 df['closure_tat'] = df['closure_tat'].clip(lower=0)
@@ -433,6 +479,7 @@ df['scheduled_tat'] = df['scheduled_tat'].astype(int)
 ```
 
 **Step 5: Pivot Table Creation (Closure TAT)**
+
 ```python
 # Extract month from case completion date
 df['completion_month'] = df['case_completion_date'].dt.to_period('M').astype(str)
@@ -452,6 +499,7 @@ pivot = pd.pivot_table(
 ```
 
 **Step 6: Percentage Calculation**
+
 ```python
 # For each month, calculate percentage distribution
 # Formula: (Individual TAT Count / Total for Month) × 100
@@ -459,10 +507,10 @@ pivot = pd.pivot_table(
 for month in months:
     # Get all TAT buckets for this month
     month_data = pivot[month]  # e.g., TAT 0, 1, 2, 3
-    
+
     # Calculate total cases per client for this month
     month_totals = month_data.sum(axis=1)
-    
+
     # Calculate percentage for each TAT bucket
     for tat in [0, 1, 2, 3]:
         pivot[(month, tat)] = (month_data[tat] / month_totals) * 100
@@ -475,6 +523,7 @@ for month in months:
 ```
 
 **Step 7: Scheduled TAT Pivot (Same Logic)**
+
 ```python
 # Same structure as Closure TAT, but using 'scheduled_tat' column
 pivot_scheduled = pd.pivot_table(
@@ -491,12 +540,12 @@ pivot_scheduled = pd.pivot_table(
 
 #### Key Differences: Closure vs Scheduled TAT
 
-| Aspect | Closure TAT | Scheduled TAT |
-|--------|-------------|---------------|
-| **Date Range** | Appointment Date → Case Completion Date | Case Received Date → Appointment Fixed Date |
-| **Day Type** | **Business Days** (Mon-Sat, excl. holidays) | **Calendar Days** (all days) |
-| **Formula** | `NETWORKDAYS(..., 11) - 1` | Simple date difference |
-| **Purpose** | Measure report generation speed | Measure appointment scheduling speed |
+| Aspect         | Closure TAT                                 | Scheduled TAT                               |
+| -------------- | ------------------------------------------- | ------------------------------------------- |
+| **Date Range** | Appointment Date → Case Completion Date     | Case Received Date → Appointment Fixed Date |
+| **Day Type**   | **Business Days** (Mon-Sat, excl. holidays) | **Calendar Days** (all days)                |
+| **Formula**    | `NETWORKDAYS(..., 11) - 1`                  | Simple date difference                      |
+| **Purpose**    | Measure report generation speed             | Measure appointment scheduling speed        |
 
 ---
 
@@ -506,11 +555,13 @@ pivot_scheduled = pd.pivot_table(
 **Class:** `DailyMISGenerator`
 
 #### Purpose
+
 Generate comprehensive daily operational reports with Drug/Non-Drug bifurcation, showing received vs closed cases by month.
 
 #### Calculation Steps
 
 **Step 1: Date Filtering**
+
 ```python
 # Filter last 3 months based on case entry date
 cutoff_date = pd.Timestamp.now() - pd.DateOffset(months=3)
@@ -518,19 +569,20 @@ filtered_df = df[df['case_entry_date'] >= cutoff_date]
 ```
 
 **Step 2: Service Categorization**
+
 ```python
 # Categorize each service as Drug or Non-Drug
 def categorize_service(service_name):
-    drug_keywords = ['drug', 'urine drug', 'substance', 'toxicology', 'alcohol', 
+    drug_keywords = ['drug', 'urine drug', 'substance', 'toxicology', 'alcohol',
                      'cannabis', 'narcotic', 'drug test', 'drug screen']
-    
+
     service_lower = str(service_name).lower()
-    
+
     # Check if any drug keyword is in service name
     for keyword in drug_keywords:
         if keyword in service_lower:
             return 'Drug'
-    
+
     # Otherwise, it's Non-Drug
     return 'Non-Drug'
 
@@ -538,6 +590,7 @@ df['service_type'] = df['service'].apply(categorize_service)
 ```
 
 **Step 3: Case Status Report (Service Breakdown)**
+
 ```python
 # Extract month from case entry date
 df['entry_month'] = df['case_entry_date'].dt.to_period('M').astype(str)
@@ -562,6 +615,7 @@ pivot.loc['Total'] = pivot.sum(axis=0)
 ```
 
 **Step 4: Client Received Report**
+
 ```python
 # Structure: Client Name (rows) × Month (columns)
 client_received = pd.pivot_table(
@@ -584,6 +638,7 @@ if 'Welleazy Demo' in client_received.index:
 ```
 
 **Step 5: Closure Data Generation** ⚠️ **CRITICAL FIX APPLIED**
+
 ```python
 # FIXED: Use case_entry_date (not report_upload_date) to match received logic
 # This ensures Closed ≤ Received always
@@ -617,6 +672,7 @@ closure_pivot = pd.pivot_table(
 ```
 
 **Step 6: VLOOKUP Merge Logic**
+
 ```python
 # For each month, create 3 columns: Received, Closed, Closure%
 # This mimics Excel VLOOKUP behavior
@@ -626,22 +682,22 @@ result = pd.DataFrame(index=client_received.index)
 for month in months:
     # Get received count for this month
     received_count = client_received[month]
-    
+
     # Get closed count from closure data (VLOOKUP equivalent)
     if month in closure_pivot.columns.get_level_values(0):
         # Sum Drug + Non-Drug for this month
         month_data = closure_pivot[month]
         closed_count = month_data.sum(axis=1)  # Sum across service types
-        
+
         # Reindex to match client_received (handles missing clients)
         closed_count = closed_count.reindex(client_received.index, fill_value=0)
     else:
         # No closure data for this month
         closed_count = pd.Series(0, index=client_received.index)
-    
+
     # Calculate percentage
     percentage = (closed_count / received_count * 100).fillna(0).round(2)
-    
+
     # Add 3 columns for this month
     result[f'{month}_Received'] = received_count
     result[f'{month}_Closed'] = closed_count.astype(int)
@@ -654,6 +710,7 @@ for month in months:
 ```
 
 **Step 7: Drug/Non-Drug Bifurcation**
+
 ```python
 # Create separate reports for Drug and Non-Drug services
 drug_df = df[df['service_type'] == 'Drug']
@@ -674,6 +731,7 @@ non_drug_report = generate_service_specific_report(non_drug_df, 'Non-Drug')
 #### Why the Fix Was Necessary
 
 **Problem Before Fix:**
+
 ```python
 # Old logic (WRONG):
 received = cases where case_entry_date in last 3 months
@@ -685,6 +743,7 @@ closed = cases where report_upload_date in last 3 months
 ```
 
 **Solution After Fix:**
+
 ```python
 # New logic (CORRECT):
 received = cases where case_entry_date in last 3 months
@@ -704,6 +763,7 @@ The Daily MIS generates an Excel file with 4 sheets:
 4. **Non-Drug Cases**: Same structure as Client Report, filtered for Non-Drug services only
 
 Each sheet includes:
+
 - **Blue header** (`366092`) with white bold text
 - **Gray background** (`E7E6E6`) for percentage columns
 - **Bold client names** in the first column
@@ -720,6 +780,7 @@ Each sheet includes:
 Before any calculations, raw data goes through normalization:
 
 ### Step 1: Column Name Standardization
+
 ```python
 # Map raw CSV column names to system names
 COLUMN_MAPPINGS = {
@@ -737,6 +798,7 @@ df.rename(columns=COLUMN_MAPPINGS, inplace=True)
 ```
 
 ### Step 2: Whitespace Cleaning
+
 ```python
 # Remove leading/trailing spaces from all string columns
 for col in string_columns:
@@ -747,6 +809,7 @@ df['case_status'] = df['case_status'].str.replace(r'\s+', ' ', regex=True)
 ```
 
 ### Step 3: Date Parsing
+
 ```python
 # Try multiple date formats
 DATE_FORMATS = [
@@ -763,7 +826,7 @@ DATE_FORMATS = [
 # Parse each date column
 for col in date_columns:
     df[col] = pd.to_datetime(df[col], errors='coerce')
-    
+
     # If many failed, try specific formats
     for date_format in DATE_FORMATS:
         temp = pd.to_datetime(df[col], format=date_format, errors='coerce')
@@ -773,42 +836,44 @@ for col in date_columns:
 ```
 
 ### Step 4: Status Normalization
+
 ```python
 # Standardize case status values for consistent matching
 def normalize_status_value(status):
     if pd.isna(status):
         return ''
-    
+
     normalized = str(status).strip().lower()
     normalized = re.sub(r'\s+', ' ', normalized)      # Multiple spaces → single
     normalized = re.sub(r'[-–—]+', '-', normalized)   # Normalize dashes
-    
+
     return normalized
 
 # Apply to all status comparisons
 ```
 
 ### Step 5: Service Categorization
+
 ```python
 # Categorize each service into Drug or Non-Drug
 def categorize_service(service):
     if pd.isna(service):
         return 'Unknown'
-    
+
     service_lower = str(service).lower().strip()
-    
+
     # Check Drug keywords
     drug_keywords = ['drug', 'urine drug', 'substance', 'toxicology', ...]
     for keyword in drug_keywords:
         if keyword in service_lower:
             return 'Drug'
-    
+
     # Check Non-Drug keywords
     non_drug_keywords = ['medical', 'physical', 'health', 'checkup', ...]
     for keyword in non_drug_keywords:
         if keyword in service_lower:
             return 'Non-Drug'
-    
+
     # Default to Non-Drug
     return 'Non-Drug'
 
@@ -825,12 +890,14 @@ df['service_category'] = df['service'].apply(categorize_service)
 All business rules, thresholds, and mappings are centralized:
 
 ### TAT Thresholds
+
 ```python
 TAT_THRESHOLD = 3  # Days - Cases exceeding this are flagged
 TAT_MAX_CAP = 3    # Cap TAT at this value for percentage calculations
 ```
 
 ### Lookback Periods
+
 ```python
 LOOKBACK_MONTHS = {
     'closure_tat': 2,   # Closure TAT analyzes last 2 months
@@ -839,6 +906,7 @@ LOOKBACK_MONTHS = {
 ```
 
 ### Status Filters
+
 ```python
 STATUS_FILTERS = {
     'tat_mis': [
@@ -865,6 +933,7 @@ STATUS_FILTERS = {
 ```
 
 ### Highlight Statuses (for Pending MIS)
+
 ```python
 HIGHLIGHT_STATUSES = [
     'Fresh case',
@@ -882,7 +951,9 @@ HIGHLIGHT_STATUSES = [
 ## 8. Performance Optimizations
 
 ### 8.1 Status Counting Optimization
+
 **Before (Slow):**
+
 ```python
 # Counted each status individually - O(n) for each status
 for status in unique_statuses:
@@ -890,6 +961,7 @@ for status in unique_statuses:
 ```
 
 **After (Fast):**
+
 ```python
 # Use value_counts() - O(n) once for all statuses
 status_counts = df['case_status'].value_counts(dropna=True)
@@ -899,12 +971,14 @@ for status, count in status_counts.head(10).items():
 ```
 
 ### 8.2 Large CSV Handling
+
 ```python
 # Read CSV with optimized settings
 df = pd.read_csv(filepath, low_memory=False)  # Prevents dtype warnings
 ```
 
 ### 8.3 Date Parsing
+
 ```python
 # Use pandas' optimized date parsing
 df['date_col'] = pd.to_datetime(df['date_col'], errors='coerce')
@@ -916,6 +990,7 @@ df['date_col'] = pd.to_datetime(df['date_col'], errors='coerce')
 ## 9. Error Handling & Data Quality
 
 ### Validation Checks
+
 ```python
 # 1. Check for duplicate case IDs
 duplicates = df['case_id'].duplicated().sum()
@@ -935,6 +1010,7 @@ if missing:
 ```
 
 ### Handling Missing Data
+
 ```python
 # For string columns
 df['client_name'].fillna('Unknown', inplace=True)
@@ -947,6 +1023,7 @@ df['tat_days'].fillna(0, inplace=True)
 ```
 
 ### Edge Cases
+
 ```python
 # 1. Negative TAT (future appointments)
 df['tat_days'] = df['tat_days'].clip(lower=0)
@@ -962,15 +1039,15 @@ closed_count = closed_count.reindex(received.index, fill_value=0)
 
 ## 10. Summary of Key Formulas
 
-| Report | Metric | Formula | Day Type |
-|--------|--------|---------|----------|
-| **TAT MIS** | Current TAT | `Current Date - Appointment Date` | Calendar |
-| **Closure TAT** | Closure TAT | `NETWORKDAYS(Appt Date, Completion Date, 11) - 1` | Business (Mon-Sat) |
-| **Closure TAT** | Scheduled TAT | `Appt Fixed Date - Case Received Date` | Calendar |
-| **Daily MIS** | Received | Count where `case_entry_date` in last 3 months | - |
-| **Daily MIS** | Closed | Count where `case_entry_date` in last 3 months AND status = Closed | - |
-| **Daily MIS** | Closure % | `(Closed / Received) × 100` | - |
-| **Pending MIS** | - | Pivot count by status and month | - |
+| Report          | Metric        | Formula                                                            | Day Type           |
+| --------------- | ------------- | ------------------------------------------------------------------ | ------------------ |
+| **TAT MIS**     | Current TAT   | `Current Date - Appointment Date`                                  | Calendar           |
+| **Closure TAT** | Closure TAT   | `NETWORKDAYS(Appt Date, Completion Date, 11) - 1`                  | Business (Mon-Sat) |
+| **Closure TAT** | Scheduled TAT | `Appt Fixed Date - Case Received Date`                             | Calendar           |
+| **Daily MIS**   | Received      | Count where `case_entry_date` in last 3 months                     | -                  |
+| **Daily MIS**   | Closed        | Count where `case_entry_date` in last 3 months AND status = Closed | -                  |
+| **Daily MIS**   | Closure %     | `(Closed / Received) × 100`                                        | -                  |
+| **Pending MIS** | -             | Pivot count by status and month                                    | -                  |
 
 ---
 
@@ -991,6 +1068,7 @@ welleazy_project/
 ```
 
 **Dependency Flow:**
+
 ```
 Raw Data → Normalization → Validation → MIS Generators → Reports → UI
                 ↓
