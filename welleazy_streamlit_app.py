@@ -439,11 +439,22 @@ def render_veriright_filters(key_prefix):
     max_date = st.session_state.vr_max_date
     all_clients = st.session_state.vr_clients
     
-    if min_date is None or max_date is None:
-         min_date = datetime.now().date()
-         max_date = datetime.now().date()
-    
     st.markdown("### Filter Data")
+    
+    # If no valid dates, show only client filter
+    if min_date is None or max_date is None:
+        st.warning("⚠️ No valid dates found in data. Date received column could not be parsed. Showing client filter only.")
+        selected_clients = st.multiselect(
+            "Select Clients",
+            options=all_clients,
+            default=[],
+            key=f"vr_client_{key_prefix}",
+            placeholder="Search specific clients or leave empty for all"
+        )
+        st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
+        return (None, None), selected_clients
+    
+    # Show both date and client filters
     col1, col2 = st.columns([1, 2])
     
     with col1:
@@ -471,25 +482,88 @@ def render_veriright_filters(key_prefix):
 
 def filter_veriright_dataframe(df, date_range, selected_clients):
     """Filter VeriRight dataframe by date and clients"""
+    # Write debug to file
+    with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+        f.write(f"\n{'='*60}\n")
+        f.write(f"TIMESTAMP: {datetime.now()}\n")
+        f.write(f"Input df shape: {df.shape if df is not None and not df.empty else 'None/Empty'}\n")
+        f.write(f"Date range: {date_range}\n")
+        f.write(f"Selected clients: {selected_clients}\n")
+    
     if df is None or df.empty:
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write("ERROR: Input dataframe is None or empty\n")
         return df
     
     filtered = df.copy()
     
-    # Apply date filter
-    if date_range and len(date_range) == 2:
-        start_date, end_date = date_range
-        if not pd.api.types.is_datetime64_any_dtype(filtered['case_received_date']):
-             filtered['case_received_date'] = pd.to_datetime(filtered['case_received_date'], errors='coerce')
-             
-        filtered = filtered[
-            (filtered['case_received_date'].dt.date >= start_date) & 
-            (filtered['case_received_date'].dt.date <= end_date)
-        ]
+    with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+        f.write(f"After copy: {filtered.shape}\n")
     
-    # Apply client filter
-    if selected_clients:
+    # Ensure case_received_date exists and is datetime
+    if 'case_received_date' not in filtered.columns:
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write("ERROR: case_received_date column missing!\n")
+            f.write(f"Available columns: {list(filtered.columns)}\n")
+        return filtered
+    
+    # Convert to datetime if needed
+    if not pd.api.types.is_datetime64_any_dtype(filtered['case_received_date']):
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write("Converting case_received_date to datetime...\n")
+        filtered['case_received_date'] = pd.to_datetime(filtered['case_received_date'], errors='coerce')
+    
+    with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+        f.write(f"Date column type: {filtered['case_received_date'].dtype}\n")
+        f.write(f"Non-null dates: {filtered['case_received_date'].notna().sum()}\n")
+        f.write(f"Min date: {filtered['case_received_date'].min()}\n")
+        f.write(f"Max date: {filtered['case_received_date'].max()}\n")
+    
+    # Apply date filter ONLY if we have valid dates
+    if date_range and len(date_range) == 2:
+        # Check if date column has valid dates
+        min_date = filtered['case_received_date'].min()
+        max_date = filtered['case_received_date'].max()
+        
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"Date filter range: {date_range[0]} to {date_range[1]}\n")
+            f.write(f"Data date range: {min_date} to {max_date}\n")
+        
+        if pd.notna(min_date) and pd.notna(max_date):
+            # We have valid dates, apply filter
+            start_date = pd.Timestamp(date_range[0])
+            end_date = pd.Timestamp(date_range[1])
+            
+            before_filter = len(filtered)
+            # CRITICAL FIX: Keep rows with NaT dates + rows within date range
+            # This is essential for HDFC ITR/Auto data which has ~60% blank dates
+            filtered = filtered[
+                (filtered['case_received_date'].isna()) |  # Keep rows with NaT dates
+                ((filtered['case_received_date'] >= start_date) & 
+                 (filtered['case_received_date'] <= end_date))
+            ]
+            with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+                f.write(f"After date filter: {len(filtered)} rows (removed {before_filter - len(filtered)})\n")
+                f.write(f"Kept {filtered['case_received_date'].isna().sum()} rows with NaT dates\n")
+        else:
+            with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+                f.write("WARNING: Dates are NaT, skipping date filter\n")
+        # else: All dates are NaT, skip date filtering and show all data
+    
+    # Apply client filter (only if clients are specifically selected)
+    if selected_clients and len(selected_clients) > 0:
+        before_filter = len(filtered)
         filtered = filtered[filtered['client_name'].isin(selected_clients)]
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write(f"Applied client filter for {len(selected_clients)} clients: {selected_clients}\n")
+            f.write(f"After client filter: {len(filtered)} rows (removed {before_filter - len(filtered)})\n")
+    else:
+        with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+            f.write("No client filter applied (showing all clients)\n")
+    
+    with open('veriright_filter_debug.log', 'a', encoding='utf-8') as f:
+        f.write(f"Final filtered shape: {filtered.shape}\n")
+        f.write(f"{'='*60}\n")
     
     return filtered
 
@@ -590,7 +664,7 @@ def sidebar():
             # </div>
             # """.format(st.session_state.get('name', 'User')), unsafe_allow_html=True)
             
-            if st.button("Logout", key="logout_btn", type="secondary", use_container_width=True):
+            if st.button("Logout", key="logout_btn", type="secondary", width='stretch'):
                 # Preserve data state across logout/login
                 preserved_data = {
                     'normalized_data': st.session_state.get('normalized_data'),
@@ -633,7 +707,7 @@ def _welleazy_sidebar():
         # st.success(f"✓ {len(st.session_state.normalized_data):,} records loaded")
         
         # Option to reload from API
-        if st.button("🔄 Reload from API", type="primary", use_container_width=True):
+        if st.button("🔄 Reload from API", type="primary", width='stretch'):
             st.session_state.normalized_data = None
             st.session_state.pipeline = None
             st.session_state.api_load_attempted = False  # Reset to trigger auto-load
@@ -653,10 +727,10 @@ def _welleazy_sidebar():
     
     if uploaded:
         st.success(f"✓ Uploaded: {uploaded.name}")
-        should_process = st.button("🚀 Process Uploaded Data", type="primary", use_container_width=True, key="welleazy_process_file")
+        should_process = st.button("🚀 Process Uploaded Data", type="primary", width='stretch', key="welleazy_process_file")
     elif st.session_state.normalized_data is None:
         # Show button to load from API when no data is loaded
-        use_api = st.button("🌐 Load Data from API", type="primary", use_container_width=True, key="welleazy_process_api")
+        use_api = st.button("🌐 Load Data from API", type="primary", width='stretch', key="welleazy_process_api")
         should_process = use_api
     
     if should_process:
@@ -774,7 +848,7 @@ def _veriright_sidebar():
             for f in uploaded_files:
                 st.write(f"• {f.name}")
         
-        if st.button("🚀 Process Data", type="primary", use_container_width=True, key="veriright_process"):
+        if st.button("🚀 Process Data", type="primary", width='stretch', key="veriright_process"):
             try:
                 # Process uploaded files in-memory
                 file_buffers = {}
@@ -800,6 +874,10 @@ def _veriright_sidebar():
                         if pd.notna(min_d) and pd.notna(max_d):
                             st.session_state.vr_min_date = min_d.date()
                             st.session_state.vr_max_date = max_d.date()
+                        else:
+                            # No valid dates, set to None
+                            st.session_state.vr_min_date = None
+                            st.session_state.vr_max_date = None
                     
                     st.success("✓ VeriRight Data Processed!")
                     st.rerun()
@@ -925,7 +1003,7 @@ def overview_tab():
             high_tat_cases = df_with_appt[df_with_appt['tat_days'] > 3].copy()
             status_breakdown = high_tat_cases['case_status'].value_counts().reset_index()
             status_breakdown.columns = ['Case Status', 'Count']
-            st.dataframe(status_breakdown, use_container_width=True, hide_index=True)
+            st.dataframe(status_breakdown, width='stretch', hide_index=True)
             
             # Show detailed list of high TAT cases
             st.markdown("### Detailed List of High TAT Cases")
@@ -937,7 +1015,7 @@ def overview_tab():
             
             st.dataframe(
                 high_tat_display,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "appointment_date": st.column_config.DateColumn("Appointment Date", format="DD/MM/YYYY"),
@@ -973,7 +1051,7 @@ def overview_tab():
             yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.2)'),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        st.plotly_chart(fig_trend, use_container_width=True)
+        st.plotly_chart(fig_trend, width='stretch')
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -1010,7 +1088,7 @@ def overview_tab():
         xaxis_showgrid=True,
         xaxis_gridcolor='rgba(128, 128, 128, 0.2)',
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 def client_tab():
     st.markdown("## Client Performance")
@@ -1110,7 +1188,7 @@ def client_tab():
             xaxis=dict(showgrid=False),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 def operations_tab():
     st.markdown("## Operations Performance")
@@ -1180,7 +1258,7 @@ def operations_tab():
             paper_bgcolor='rgba(0,0,0,0)',
             xaxis_title=""
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     with col2:
         st.markdown("### Closure Rate by Location")
@@ -1195,7 +1273,7 @@ def operations_tab():
             xaxis_title="",
             yaxis=dict(range=[0, 105])
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 def tat_tab():
     st.markdown("## TAT MIS Report")
@@ -1245,7 +1323,7 @@ def tat_tab():
     
     st.dataframe(
         filtered_view,
-        use_container_width=True,
+        width='stretch',
         height=500,
         column_config={
             "tat_days": st.column_config.NumberColumn("TAT (days)", format="%d"),
@@ -1288,7 +1366,7 @@ def pending_tab():
     col3.metric("Statuses", len(summary.get('by_status', {})))
     
     st.markdown("---")
-    st.dataframe(report, use_container_width=True, height=400)
+    st.dataframe(report, width='stretch', height=400)
     
     # Generate Excel in memory without temp files
     buffer = io.BytesIO()
@@ -1428,7 +1506,7 @@ def closure_tab():
                 paper_bgcolor='rgba(0,0,0,0)',
                 yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
             )
-            st.plotly_chart(fig1, use_container_width=True) 
+            st.plotly_chart(fig1, width='stretch') 
         
         with col2:
             # Scheduled TAT
@@ -1464,13 +1542,13 @@ def closure_tab():
                 paper_bgcolor='rgba(0,0,0,0)',
                 yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width='stretch')
 
     st.markdown("---")
 
     tab1, tab2 = st.tabs(["Closure TAT Data", "Scheduled TAT Data"])
-    with tab1: st.dataframe(closure_df, use_container_width=True)
-    with tab2: st.dataframe(schedule_df, use_container_width=True)
+    with tab1: st.dataframe(closure_df, width='stretch')
+    with tab2: st.dataframe(schedule_df, width='stretch')
     
     # Generate Excel in memory without temp files
     buffer = io.BytesIO()
@@ -1541,14 +1619,14 @@ def daily_tab():
     
     with tabs[0]: 
         if 'case_status' in reports and not reports['case_status'].empty:
-            st.dataframe(reports['case_status'], use_container_width=True)
+            st.dataframe(reports['case_status'], width='stretch')
         else:
             st.info("No case status data available")
             
     with tabs[1]:
         if 'client_merged' in reports:
             if not reports['client_merged'].empty:
-                st.dataframe(reports['client_merged'], use_container_width=True)
+                st.dataframe(reports['client_merged'], width='stretch')
             else:
                 st.warning("Client report is empty - No data found in the last 3 months")
         else:
@@ -1556,13 +1634,13 @@ def daily_tab():
             
     with tabs[2]:
         if 'drug' in reports and not reports['drug'].empty:
-            st.dataframe(reports['drug'], use_container_width=True)
+            st.dataframe(reports['drug'], width='stretch')
         else:
             st.info("No drug case data available")
             
     with tabs[3]:
         if 'non_drug' in reports and not reports['non_drug'].empty:
-            st.dataframe(reports['non_drug'], use_container_width=True)
+            st.dataframe(reports['non_drug'], width='stretch')
         else:
             st.info("No non-drug case data available")
         
@@ -1674,7 +1752,7 @@ def main():
         st.markdown("### Login")
         username = st.text_input("Username", placeholder="admin or manager")
         password = st.text_input("Password", type="password", placeholder="Enter password")
-        submit = st.form_submit_button("Login", use_container_width=True)
+        submit = st.form_submit_button("Login", width='stretch')
         
         if submit:
             credentials = load_credentials()
@@ -1700,7 +1778,16 @@ def main():
 def welleazy_main():
     """Welleazy MIS Dashboard"""
     st.markdown("# Welleazy MIS")
-    st.markdown(f"*Last updated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}*")
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    ist = ZoneInfo("Asia/Kolkata")
+    now_ist = datetime.now(ist)
+
+    st.markdown(
+        f"*Last updated: {now_ist.strftime('%B %d, %Y at %I:%M %p IST')}*"
+    )
+    # st.markdown(f"*Last updated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}*")
     # st.markdown("---")
     
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -1850,7 +1937,7 @@ def veriright_daily_mis_tab():
                     paper_bgcolor='rgba(0,0,0,0)'
                 )
                 fig_status.update_traces(textposition='inside', textinfo='percent+label')
-                st.plotly_chart(fig_status, use_container_width=True)
+                st.plotly_chart(fig_status, width='stretch')
         
         with col_charts2:
             if not client_df.empty:
@@ -1877,7 +1964,7 @@ def veriright_daily_mis_tab():
                     plot_bgcolor='rgba(0,0,0,0)',
                     paper_bgcolor='rgba(0,0,0,0)'
                 )
-                st.plotly_chart(fig_client, use_container_width=True)
+                st.plotly_chart(fig_client, width='stretch')
 
     st.markdown("---")
 
@@ -1889,7 +1976,7 @@ def veriright_daily_mis_tab():
         if not status_df.empty:
             st.dataframe(
                 status_df, 
-                use_container_width=True, 
+                width='stretch', 
                 height=400,
                 column_config={
                     "Percentage": st.column_config.ProgressColumn(
@@ -2028,7 +2115,7 @@ def veriright_daily_mis_tab():
             # Use column config for cleaner display
             st.dataframe(
                 client_df, 
-                use_container_width=True, 
+                width='stretch', 
                 height=500,
                 column_config={
                     "% As per Close": st.column_config.ProgressColumn(
@@ -2142,7 +2229,7 @@ def veriright_sud_tab():
         return
     
     st.markdown("#### Case Status Pivot Table")
-    st.dataframe(pivot, use_container_width=True, height=400)
+    st.dataframe(pivot, width='stretch', height=400)
     
     # Download button
     buffer = io.BytesIO()
@@ -2251,7 +2338,7 @@ def veriright_sbi_tab():
         return
     
     st.markdown("#### Case Status Pivot")
-    st.dataframe(reports['status_pivot'], use_container_width=True, height=400)
+    st.dataframe(reports['status_pivot'], width='stretch', height=400)
     
     if 'note' in reports:
         st.info(f"ℹ️ {reports['note']}")
@@ -2364,7 +2451,7 @@ def veriright_hdfc_vcheck_tab():
         return
     
     st.markdown("#### Case Status by Month")
-    st.dataframe(pivot, use_container_width=True, height=400)
+    st.dataframe(pivot, width='stretch', height=400)
     
     # Download button
     buffer = io.BytesIO()
@@ -2531,14 +2618,14 @@ def veriright_hdfc_itr_tab():
     with col1:
         st.markdown("#### HDFC ITR manual (Assisted)")
         if 'assisted' in reports and not reports['assisted'].empty:
-            st.dataframe(reports['assisted'], use_container_width=True, height=400)
+            st.dataframe(reports['assisted'], width='stretch', height=400)
         else:
             st.info("No HDFC ITR manual cases found")
     
     with col2:
         st.markdown("#### HDFC Auto (Non-Assisted)")
         if 'non_assisted' in reports and not reports['non_assisted'].empty:
-            st.dataframe(reports['non_assisted'], use_container_width=True, height=400)
+            st.dataframe(reports['non_assisted'], width='stretch', height=400)
         else:
             st.info("No HDFC Auto cases found")
     
@@ -2800,7 +2887,7 @@ def veriright_overall_mis_tab():
                 paper_bgcolor='rgba(0,0,0,0)',
                 yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
             )
-            st.plotly_chart(fig_trend, use_container_width=True)
+            st.plotly_chart(fig_trend, width='stretch')
             
         with col_c2:
              # Client Volume Share
@@ -2819,7 +2906,7 @@ def veriright_overall_mis_tab():
                  plot_bgcolor='rgba(0,0,0,0)',
                  paper_bgcolor='rgba(0,0,0,0)'
              )
-             st.plotly_chart(fig_vol, use_container_width=True)
+             st.plotly_chart(fig_vol, width='stretch')
 
         
         # Apply conditional formatting
@@ -2840,7 +2927,7 @@ def veriright_overall_mis_tab():
         styled_df = summary_df.style.map(highlight_closure, subset=['% As per Close'])
         st.dataframe(
             styled_df, 
-            use_container_width=True, 
+            width='stretch', 
             height=400
         )
     
@@ -2849,7 +2936,7 @@ def veriright_overall_mis_tab():
     # Status Pivot
     st.markdown("#### Case Status Distribution by Month")
     if 'status_pivot' in reports:
-        st.dataframe(reports['status_pivot'], use_container_width=True, height=300)
+        st.dataframe(reports['status_pivot'], width='stretch', height=300)
     
     # Download button
     buffer = io.BytesIO()
@@ -2869,3 +2956,4 @@ def veriright_overall_mis_tab():
 
 if __name__ == "__main__":
     main()
+

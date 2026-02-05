@@ -89,7 +89,17 @@ class VeriRightNormalizer:
         """Parse and standardize date columns"""
         for date_col in self.config.DATE_COLUMNS:
             if date_col in df.columns:
-                # Use dayfirst=True to parse DD/MM/YYYY format correctly
+                # Try explicit DD/MM/YYYY format first
+                try:
+                    df[date_col] = pd.to_datetime(df[date_col], format='%d/%m/%Y', errors='coerce')
+                    valid_count = df[date_col].notna().sum()
+                    if valid_count > 0:
+                        logger.info(f"Parsed {date_col} with DD/MM/YYYY format: {valid_count} valid dates")
+                        continue
+                except:
+                    pass
+                
+                # Fallback to dayfirst=True auto-detection
                 df[date_col] = pd.to_datetime(df[date_col], errors='coerce', dayfirst=True)
                 logger.info(f"Parsed {date_col}: {df[date_col].notna().sum()} valid dates")
         
@@ -219,7 +229,7 @@ class VeriRightNormalizer:
         return df
     
     def _derive_hdfc_client_names(self, df):
-        """Derive specific client names for HDFC Life based on Branch and Case Type columns"""
+        """Derive specific client names for HDFC Life based on Branch/Case Rec'd Mode and Case Type columns"""
         if 'client_name' not in df.columns:
             return df
         
@@ -229,18 +239,24 @@ class VeriRightNormalizer:
         if not hdfc_mask.any():
             return df
         
-        # Check for Branch column
+        # Check for Branch column OR Case Rec'd Mode column (both used for Manual/Non-Assisted classification)
+        mode_col = None
         if 'Branch' in df.columns:
-            # HDFC Life + Branch = "Manual" → HDFC ITR manual
-            manual_mask = hdfc_mask & (df['Branch'].astype(str).str.strip().str.lower() == 'manual')
+            mode_col = 'Branch'
+        elif 'case_received_mode' in df.columns:  # After column standardization
+            mode_col = 'case_received_mode'
+        
+        if mode_col:
+            # HDFC Life + Mode = "Manual" → HDFC ITR manual
+            manual_mask = hdfc_mask & (df[mode_col].astype(str).str.strip().str.lower() == 'manual')
             df.loc[manual_mask, 'client_name'] = 'HDFC ITR manual'
             
-            # HDFC Life + Branch = "Non Assisted" → HDFC Auto
-            non_assisted_mask = hdfc_mask & (df['Branch'].astype(str).str.strip().str.lower().isin(['non assisted', 'non-assisted', 'nonassisted']))
+            # HDFC Life + Mode = "Non Assisted" / "Bulk upload" → HDFC Auto
+            non_assisted_mask = hdfc_mask & (df[mode_col].astype(str).str.strip().str.lower().isin(['non assisted', 'non-assisted', 'nonassisted', 'bulk upload']))
             df.loc[non_assisted_mask, 'client_name'] = 'HDFC Auto'
             
-            logger.info(f"Derived {manual_mask.sum()} HDFC ITR manual cases")
-            logger.info(f"Derived {non_assisted_mask.sum()} HDFC Auto cases")
+            logger.info(f"Derived {manual_mask.sum()} HDFC ITR manual cases (from {mode_col})")
+            logger.info(f"Derived {non_assisted_mask.sum()} HDFC Auto cases (from {mode_col})")
         
         # Check for Case Type or Class Type column
         case_type_col = None

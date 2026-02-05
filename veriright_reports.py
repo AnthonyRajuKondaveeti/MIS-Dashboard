@@ -61,14 +61,19 @@ class SBIReportGenerator:
         if self.data.empty:
             return {}
         
-        # Filter for SBI Life and Video KYC
-        sbi_data = self.data[
-            (self.data['client_name'].str.contains('SBI', case=False, na=False)) &
-            (self.data['activity_type'].str.contains('Video KYC|VKYC', case=False, na=False))
-        ].copy()
+        # Filter for SBI Life
+        sbi_filter = self.data['client_name'].str.contains('SBI', case=False, na=False)
+        
+        # Add Video KYC filter if activity_type column exists
+        if 'activity_type' in self.data.columns:
+            activity_filter = self.data['activity_type'].str.contains('Video KYC|VKYC', case=False, na=False)
+            sbi_data = self.data[sbi_filter & activity_filter].copy()
+        else:
+            # If no activity_type column, just filter by client name
+            sbi_data = self.data[sbi_filter].copy()
         
         if sbi_data.empty:
-            logger.warning("No SBI Video KYC data found")
+            logger.warning("No SBI data found")
             return {}
         
         # Create a simple status count instead of pivot
@@ -112,7 +117,33 @@ class HDFCVcheckReportGenerator:
             logger.warning("No HDFC VKYC data found")
             return pd.DataFrame()
         
-        # Extract month from case_received_date
+        # ENHANCED FIX: Use completion date as fallback for HDFC Vcheck rows with missing received dates
+        initial_count = len(hdfc_data)
+        
+        # Count rows with missing received dates
+        missing_received = hdfc_data['case_received_date'].isna().sum()
+        
+        # For rows with missing received date, try using completion date as fallback
+        if 'case_completion_date' in hdfc_data.columns and missing_received > 0:
+            fallback_mask = hdfc_data['case_received_date'].isna() & hdfc_data['case_completion_date'].notna()
+            fallback_count = fallback_mask.sum()
+            
+            if fallback_count > 0:
+                hdfc_data.loc[fallback_mask, 'case_received_date'] = hdfc_data.loc[fallback_mask, 'case_completion_date']
+                logger.warning(f"Used completion date as fallback for {fallback_count} HDFC Vcheck rows with missing Case Received Date")
+        
+        # Now filter out rows that still don't have a date
+        hdfc_data = hdfc_data[hdfc_data['case_received_date'].notna()].copy()
+        excluded_count = initial_count - len(hdfc_data)
+        
+        if excluded_count > 0:
+            logger.warning(f"Excluded {excluded_count} HDFC Vcheck rows with missing dates (both received and completion)")
+        
+        if hdfc_data.empty:
+            logger.error("No HDFC Vcheck rows with valid dates found")
+            return pd.DataFrame()
+        
+        # Extract month from case_received_date (valid dates only)
         hdfc_data['Month'] = hdfc_data['case_received_date'].dt.to_period('M').astype(str)
         
         # Create status counts by month using crosstab
@@ -214,7 +245,34 @@ class OverallMISReportGenerator:
         # FIX: Remove duplicate columns if present
         df = df.loc[:, ~df.columns.duplicated()]
         
-        # Extract month
+        # ENHANCED FIX: Use completion date as fallback when received date is missing
+        # This is critical for HDFC ITR/Auto data where ~60% of rows have blank received dates
+        initial_count = len(df)
+        
+        # Count rows with missing received dates
+        missing_received = df['case_received_date'].isna().sum()
+        
+        # For rows with missing received date, try using completion date as fallback
+        if 'case_completion_date' in df.columns and missing_received > 0:
+            fallback_mask = df['case_received_date'].isna() & df['case_completion_date'].notna()
+            fallback_count = fallback_mask.sum()
+            
+            if fallback_count > 0:
+                df.loc[fallback_mask, 'case_received_date'] = df.loc[fallback_mask, 'case_completion_date']
+                logger.warning(f"Used completion date as fallback for {fallback_count} rows with missing Case Received Date")
+        
+        # Now filter out rows that still don't have a date
+        df = df[df['case_received_date'].notna()].copy()
+        excluded_count = initial_count - len(df)
+        
+        if excluded_count > 0:
+            logger.warning(f"Excluded {excluded_count} rows with missing dates (both received and completion) from Overall MIS")
+        
+        if df.empty:
+            logger.error("No rows with valid dates found - cannot generate Overall MIS")
+            return {}
+        
+        # Extract month from valid dates only
         df['Month'] = df['case_received_date'].dt.strftime('%b')
         df['Month_Sort'] = df['case_received_date'].dt.month
         

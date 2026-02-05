@@ -71,7 +71,34 @@ class VeriRightDailyMISGenerator:
             logger.warning("No data available")
             return pd.DataFrame()
         
-        # Extract month from case_received_date
+        # ENHANCED FIX: Use completion date as fallback when received date is missing
+        # This is critical for HDFC ITR/Auto data where ~60% of rows have blank received dates
+        initial_count = len(df)
+        
+        # Count rows with missing received dates
+        missing_received = df['case_received_date'].isna().sum()
+        
+        # For rows with missing received date, try using completion date as fallback
+        if 'case_completion_date' in df.columns and missing_received > 0:
+            fallback_mask = df['case_received_date'].isna() & df['case_completion_date'].notna()
+            fallback_count = fallback_mask.sum()
+            
+            if fallback_count > 0:
+                df.loc[fallback_mask, 'case_received_date'] = df.loc[fallback_mask, 'case_completion_date']
+                logger.warning(f"Used completion date as fallback for {fallback_count} rows with missing Case Received Date")
+        
+        # Now filter out rows that still don't have a date
+        df = df[df['case_received_date'].notna()].copy()
+        excluded_count = initial_count - len(df)
+        
+        if excluded_count > 0:
+            logger.warning(f"Excluded {excluded_count} rows with missing dates (both received and completion) from Daily MIS")
+        
+        if df.empty:
+            logger.error("No rows with valid dates found - cannot generate Daily MIS")
+            return pd.DataFrame()
+        
+        # Extract month from valid dates only
         df['month'] = df['case_received_date'].dt.strftime('%B')
         df['month_num'] = df['case_received_date'].dt.month
         

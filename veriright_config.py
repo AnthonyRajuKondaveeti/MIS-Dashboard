@@ -75,7 +75,10 @@ class VeriRightConfig:
             'Cancel',
             'Cancelled by Insurance Company',
             'Cancelled by insurance company',
-            'Cancelled by insurance Company'
+            'Cancelled by insurance Company',
+            'customer has cancelled/wants to cancel the policy',
+            'Customer has cancelled/wants to cancel the policy',
+            'Customer Has Cancelled/Wants To Cancel The Policy'
         ],
         'closed_cases': [
             'Closed',
@@ -87,7 +90,8 @@ class VeriRightConfig:
             'Closed - Submitted to Insurance',
             'Closed - submitted to insurance',
             'Vcheck Completed - QC Pending',
-            'Vcheck completed – QC Pending'
+            'Vcheck completed – QC Pending',
+            'NA'  # HDFC ITR data uses NA for completed cases
         ],
         'pending_cases': [
             'Pending',
