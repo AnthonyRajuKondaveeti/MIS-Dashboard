@@ -34,3 +34,12 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Documentation
+*.md
+
+# Logs
+*.log
+
+# Local / secret config
+config_auth.yaml
