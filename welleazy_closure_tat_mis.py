@@ -284,14 +284,12 @@ class ClosureTATMISGenerator:
         if pivot.index.name is None:
             pivot.index.name = 'client_name'
         
-        # Calculate percentages for each month
-        pivot_pct = self._calculate_tat_percentages(pivot)
-        
+        # Return original counts (no percentage conversion)
         # Flatten multi-index columns to remove bucket headers
-        if isinstance(pivot_pct.columns, pd.MultiIndex):
-            pivot_pct.columns = [f'{month} (TAT {tat})' for month, tat in pivot_pct.columns]
+        if isinstance(pivot.columns, pd.MultiIndex):
+            pivot.columns = [f'{month} (TAT {tat})' for month, tat in pivot.columns]
         
-        return pivot_pct
+        return pivot
     
     def _generate_scheduled_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -322,14 +320,12 @@ class ClosureTATMISGenerator:
         if pivot.index.name is None:
             pivot.index.name = 'client_name'
         
-        # Calculate percentages
-        pivot_pct = self._calculate_tat_percentages(pivot)
-        
+        # Return original counts (no percentage conversion)
         # Flatten multi-index columns to remove bucket headers
-        if isinstance(pivot_pct.columns, pd.MultiIndex):
-            pivot_pct.columns = [f'{month} (TAT {tat})' for month, tat in pivot_pct.columns]
+        if isinstance(pivot.columns, pd.MultiIndex):
+            pivot.columns = [f'{month} (TAT {tat})' for month, tat in pivot.columns]
         
-        return pivot_pct
+        return pivot
     
     def _calculate_tat_percentages(self, pivot: pd.DataFrame) -> pd.DataFrame:
         """
@@ -376,7 +372,7 @@ class ClosureTATMISGenerator:
                 
                 # Write with index (client_name will be the first column)
                 closure_clean.to_excel(writer, sheet_name='Closure TAT')
-                self._format_worksheet(writer.sheets['Closure TAT'], 'Closure TAT (%)')
+                self._format_worksheet(writer.sheets['Closure TAT'], 'Closure TAT (Count)')
             
             # Write Scheduled TAT report
             if not self.scheduled_report.empty:
@@ -387,7 +383,7 @@ class ClosureTATMISGenerator:
                 
                 # Write with index (client_name will be the first column)
                 scheduled_clean.to_excel(writer, sheet_name='Scheduled TAT')
-                self._format_worksheet(writer.sheets['Scheduled TAT'], 'Scheduled TAT (%)')
+                self._format_worksheet(writer.sheets['Scheduled TAT'], 'Scheduled TAT (Count)')
         
         logger.info(f"Reports exported to {filepath}")
     
@@ -405,12 +401,12 @@ class ClosureTATMISGenerator:
             cell.font = header_font
             cell.alignment = Alignment(horizontal='center', vertical='center')
         
-        # Format percentage values (all data cells)
+        # Format values as integers (all data cells)
         for row in range(2, worksheet.max_row + 1):
             for col in range(2, worksheet.max_column + 1):
                 cell = worksheet.cell(row=row, column=col)
-                # Format as percentage with 2 decimal places
-                cell.number_format = '0.00'
+                # Format as integer
+                cell.number_format = '0'
                 cell.alignment = Alignment(horizontal='center', vertical='center')
         
         # Format row headers (client names in first column)

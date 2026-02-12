@@ -1237,13 +1237,12 @@ def operations_tab():
 
     # Display Rows
     for _, row in dc_df.iterrows():
-        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+        col1, col2, col3 = st.columns([3, 1, 1])
         with col1: st.markdown(f"**{row['City']}**")
         with col2: st.metric("Cases", row['Cases'])
         with col3:
             status = '🟢' if row['Closure'] >= 90 else '🟡' if row['Closure'] >= 85 else '🔴'
             st.metric("Closure", f"{status} {row['Closure']}%")
-        with col4: st.progress(row['Closure'] / 100)
         st.markdown("---")
     
     # Chart

@@ -242,6 +242,37 @@ class DailyMISGenerator:
             result[f'{display_month} - Closer as per received date'] = cohort_series
             result[f'{display_month} - Closer as per closer date'] = act_series
             result[f'{display_month} - % as per received date'] = pct_series
+        
+        # Add Total Row
+        if not result.empty:
+            total_row = {}
+            
+            for col in result.columns:
+                if '% as per received date' in col:
+                    # Calculate overall percentage from totals
+                    # Find corresponding month columns
+                    month_prefix = col.replace(' - % as per received date', '')
+                    received_col = f'{month_prefix} - Case Received'
+                    closed_col = f'{month_prefix} - Closer as per received date'
+                    
+                    if received_col in result.columns and closed_col in result.columns:
+                        total_received = result[received_col].sum()
+                        total_closed = result[closed_col].sum()
+                        
+                        if total_received > 0:
+                            pct_val = round((total_closed / total_received) * 100)
+                            total_row[col] = f'{pct_val}%'
+                        else:
+                            total_row[col] = ''
+                    else:
+                        total_row[col] = ''
+                else:
+                    # Sum numerical columns
+                    total_row[col] = result[col].sum()
+            
+            # Add the total row to the dataframe
+            total_df = pd.DataFrame([total_row], index=['Total'])
+            result = pd.concat([result, total_df])
             
         return result
 
